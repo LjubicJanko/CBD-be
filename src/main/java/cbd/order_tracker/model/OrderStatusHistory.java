@@ -20,23 +20,24 @@ public class OrderStatusHistory {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    private LocalDateTime timestamp;
+    private LocalDateTime creationTime;
     private String user;
 
-    public OrderStatusHistory() {
+    private String closingComment;
+    private String postalCode;
+    private String postalService;
 
-    }
+    public OrderStatusHistory() {}
 
-    public OrderStatusHistory(OrderRecord order, OrderStatus status, String user) {
+    public OrderStatusHistory(OrderRecord order, OrderStatus status, String postalCode, String postalService) {
         this.order = order;
         this.status = status;
-        this.timestamp = LocalDateTime.now();
-        this.user = user;
+        this.creationTime = LocalDateTime.now();
+        this.postalCode = postalCode;  // Optional
+        this.postalService = postalService;  // Optional
     }
 
-    public OrderRecord getOrder() {
-        return order;
-    }
+    // Getters and setters
 
     public Long getId() {
         return id;
@@ -44,6 +45,10 @@ public class OrderStatusHistory {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public OrderRecord getOrder() {
+        return order;
     }
 
     public void setOrder(OrderRecord order) {
@@ -58,12 +63,12 @@ public class OrderStatusHistory {
         this.status = status;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public LocalDateTime getCreationTime() {
+        return creationTime;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    public void setCreationTime(LocalDateTime creationTime) {
+        this.creationTime = creationTime;
     }
 
     public String getUser() {
@@ -72,5 +77,29 @@ public class OrderStatusHistory {
 
     public void setUser(String user) {
         this.user = user;
+    }
+
+    public String getClosingComment() {
+        return closingComment;
+    }
+
+    public void setClosingComment(String closingComment) {
+        this.closingComment = closingComment;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    public String getPostalService() {
+        return postalService;
+    }
+
+    public void setPostalService(String postalService) {
+        this.postalService = postalService;
     }
 }

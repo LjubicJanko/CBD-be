@@ -3,17 +3,22 @@ package cbd.order_tracker.service;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
 import cbd.order_tracker.model.OrderStatusHistory;
+import cbd.order_tracker.model.Payment;
 import cbd.order_tracker.model.dto.OrderDTO;
+import cbd.order_tracker.model.dto.OrderOverviewDto;
+import cbd.order_tracker.model.dto.OrderTrackingDTO;
+import cbd.order_tracker.model.dto.PageableResponse;
 import cbd.order_tracker.repository.OrderRepository;
 import cbd.order_tracker.repository.OrderStatusHistoryRepository;
-import cbd.order_tracker.util.ResourceNotFound;
 import cbd.order_tracker.util.UserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import cbd.order_tracker.util.OrderMapper;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -27,10 +32,9 @@ public class OrderService {
     @Autowired
     private OrderStatusHistoryRepository statusHistoryRepository;
 
-
     public OrderDTO createOrder(OrderRecord order) {
         String currentUser = UserUtil.getCurrentUser();
-        OrderRecord newOrder = new OrderRecord(order.getName(), order.getDescription(), currentUser);
+        OrderRecord newOrder = new OrderRecord(order);
         OrderRecord orderRecord = orderRepository.save(newOrder);
         return OrderMapper.toDto(orderRecord);
     }
@@ -40,12 +44,27 @@ public class OrderService {
         return OrderMapper.toDto(orderRecord);
     }
 
-    public OrderDTO changeStatus(Long id) {
+    private void setComment(Long id, String closingComment, String currentUser) {
+        OrderRecord orderRecord = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        List<OrderStatusHistory> historyList = orderRecord.getStatusHistory();
+        var lastHistoryRecord = historyList.get(historyList.size() - 1);
+        lastHistoryRecord.setClosingComment(closingComment);
+        lastHistoryRecord.setUser(currentUser);
+
+        statusHistoryRepository.save(lastHistoryRecord);
+    }
+
+    /**
+     * TODO FIX LOGIC WITH STATUS CHANGE FOR COMMENTS AND STUFF
+     */
+    public OrderDTO changeStatus(Long id, String closingComment, String postalCode, String postalService) {
         OrderRecord orderRecord = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         try {
             String currentUser = UserUtil.getCurrentUser();
-            orderRecord.nextStatus(currentUser);
+            setComment(id, closingComment, currentUser);
+            orderRecord.nextStatus(postalCode, postalService);
             orderRepository.save(orderRecord);
         } catch (IllegalStateException error) {
             System.out.println(error.getMessage());
@@ -53,15 +72,48 @@ public class OrderService {
         return OrderMapper.toDto(orderRecord);
     }
 
+    public OrderDTO addPayment(Long id, Payment payment) {
+        OrderRecord orderRecord = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        orderRecord.addPayment(payment);
+        orderRepository.save(orderRecord);
+
+        return OrderMapper.toDto(orderRecord);
+    }
+
+    /**
+     * Get OrderDTO by id
+     *
+     * @param id
+     * @return
+     */
     public OrderDTO getOrderById(Long id) {
         OrderRecord orderRecord = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         return OrderMapper.toDto(orderRecord);
     }
 
+    public PageableResponse<OrderOverviewDto> getAllPageable(List<OrderStatus> statuses, Integer page, Integer perPage) {
+        Pageable pageRequest = PageRequest.of(page, perPage);
+
+        Page<OrderRecord> orderRecords;
+
+        if (statuses != null && !statuses.isEmpty()) {
+            orderRecords = orderRepository.findAllByStatusIn(statuses, pageRequest);
+        } else {
+            orderRecords = orderRepository.findAll(pageRequest);
+        }
+
+        var orderOverviewDtos = orderRecords.stream()
+                .map(OrderMapper::toOverviewDto)
+                .collect(Collectors.toList());
+
+        return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(), orderOverviewDtos);
+    }
+
     public List<OrderDTO> getAll(List<OrderStatus> statuses) {
         Iterable<OrderRecord> orderRecords;
-        System.out.println(statuses);
 
         if (statuses != null && !statuses.isEmpty()) {
             orderRecords = orderRepository.findByStatusIn(statuses);
@@ -78,12 +130,12 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public OrderDTO getOrderByTrackingId(String trackingId) {
+    public OrderTrackingDTO getOrderByTrackingId(String trackingId) {
         OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         List<OrderStatusHistory> history = getOrderStatusHistory(orderRecord.getId());
         orderRecord.setStatusHistory(history);
-        return OrderMapper.toDto(orderRecord);
+        return OrderMapper.toOrderTrackingDTO(orderRecord);
 
     }
 
@@ -91,25 +143,11 @@ public class OrderService {
         orderRepository.deleteById(id);
     }
 
-    public OrderRecord changeOrderStatus(Long orderId, OrderStatus newStatus) {
-        OrderRecord orderRecord = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-        orderRecord.setStatus(newStatus);
-
-        OrderStatusHistory history = new OrderStatusHistory();
-        history.setOrder(orderRecord);
-        history.setStatus(newStatus);
-        history.setTimestamp(LocalDateTime.now());
-
-        statusHistoryRepository.save(history);
-        return orderRepository.save(orderRecord);
-    }
-
     public List<OrderStatusHistory> getOrderStatusHistory(Long orderId) {
         return statusHistoryRepository.findByOrderId(orderId);
     }
 
-    public List<OrderDTO> searchOrders(String searchTerm) {
+    public List<OrderOverviewDto> searchOrders(String searchTerm) {
         Iterable<OrderRecord> ordersIterable;
 
         if (searchTerm == null || searchTerm.isEmpty()) {
@@ -127,7 +165,7 @@ public class OrderService {
 
         // Map to DTO and return
         return orders.stream()
-                .map(OrderMapper::toDto)
+                .map(OrderMapper::toOverviewDto)
                 .collect(Collectors.toList());
 
     }

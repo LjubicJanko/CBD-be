@@ -2,7 +2,9 @@ package cbd.order_tracker.model.dto;
 
 import cbd.order_tracker.model.OrderStatus;
 import cbd.order_tracker.model.OrderStatusHistory;
+import cbd.order_tracker.model.Payment;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class OrderDTO {
@@ -10,10 +12,27 @@ public class OrderDTO {
     private Long id;
     private String name;
     private String description;
+    private String plannedEndingDate;
     private OrderStatus status;
     private String trackingId;
     private List<OrderStatusHistory> statusHistory;
+    private List<Payment> payments;
 
+    private boolean isLegalEntity;
+
+    // Use BigDecimal for monetary values
+    private BigDecimal acquisitionCost;
+    private BigDecimal salePrice;
+    private BigDecimal salePriceWithTax;
+    private BigDecimal priceDifference;
+    private BigDecimal amountPaid;
+    private BigDecimal amountLeftToPay;
+    private BigDecimal amountLeftToPayWithTax;
+
+    public OrderDTO() {
+    }
+
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -38,6 +57,14 @@ public class OrderDTO {
         this.description = description;
     }
 
+    public String getPlannedEndingDate() {
+        return plannedEndingDate;
+    }
+
+    public void setPlannedEndingDate(String plannedEndingDate) {
+        this.plannedEndingDate = plannedEndingDate;
+    }
+
     public OrderStatus getStatus() {
         return status;
     }
@@ -60,5 +87,77 @@ public class OrderDTO {
 
     public void setStatusHistory(List<OrderStatusHistory> statusHistory) {
         this.statusHistory = statusHistory;
+    }
+
+    public boolean isLegalEntity() {
+        return isLegalEntity;
+    }
+
+    public void setLegalEntity(boolean legalEntity) {
+        isLegalEntity = legalEntity;
+    }
+
+    public BigDecimal getAcquisitionCost() {
+        return acquisitionCost;
+    }
+
+    public void setAcquisitionCost(BigDecimal acquisitionCost) {
+        this.acquisitionCost = acquisitionCost;
+    }
+
+    public BigDecimal getSalePrice() {
+        return salePrice;
+    }
+
+    public void setSalePrice(BigDecimal salePrice) {
+        this.salePrice = salePrice;
+    }
+
+    public BigDecimal getSalePriceWithTax() {
+        return salePriceWithTax;
+    }
+
+    public void setSalePriceWithTax(BigDecimal salePriceWithTax) {
+        this.salePriceWithTax = salePriceWithTax;
+    }
+
+    public BigDecimal getPriceDifference() {
+        return priceDifference;
+    }
+
+    public void setPriceDifference(BigDecimal priceDifference) {
+        this.priceDifference = priceDifference;
+    }
+
+    public BigDecimal getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(BigDecimal amountPaid) {
+        this.amountPaid = amountPaid;
+    }
+
+    public BigDecimal getAmountLeftToPay() {
+        return amountLeftToPay;
+    }
+
+    public void setAmountLeftToPay(BigDecimal amountLeftToPay) {
+        this.amountLeftToPay = amountLeftToPay;
+    }
+
+    public BigDecimal getAmountLeftToPayWithTax() {
+        return amountLeftToPayWithTax;
+    }
+
+    public void setAmountLeftToPayWithTax(BigDecimal amountLeftToPayWithTax) {
+        this.amountLeftToPayWithTax = amountLeftToPayWithTax;
+    }
+
+    public List<Payment> getPayments() {
+        return payments;
+    }
+
+    public void setPayments(List<Payment> payments) {
+        this.payments = payments;
     }
 }
