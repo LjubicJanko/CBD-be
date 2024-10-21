@@ -1,5 +1,6 @@
 package cbd.order_tracker.model;
 
+import cbd.order_tracker.util.UserUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -30,6 +31,8 @@ public class OrderStatusHistory {
     public OrderStatusHistory() {}
 
     public OrderStatusHistory(OrderRecord order, OrderStatus status, String postalCode, String postalService) {
+        String currentUser = UserUtil.getCurrentUser();
+        this.user = currentUser;
         this.order = order;
         this.status = status;
         this.creationTime = LocalDateTime.now();

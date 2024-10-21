@@ -33,7 +33,6 @@ public class OrderService {
     private OrderStatusHistoryRepository statusHistoryRepository;
 
     public OrderDTO createOrder(OrderRecord order) {
-        String currentUser = UserUtil.getCurrentUser();
         OrderRecord newOrder = new OrderRecord(order);
         OrderRecord orderRecord = orderRepository.save(newOrder);
         return OrderMapper.toDto(orderRecord);
@@ -44,17 +43,6 @@ public class OrderService {
         return OrderMapper.toDto(orderRecord);
     }
 
-    private void setComment(Long id, String closingComment, String currentUser) {
-        OrderRecord orderRecord = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-        List<OrderStatusHistory> historyList = orderRecord.getStatusHistory();
-        var lastHistoryRecord = historyList.get(historyList.size() - 1);
-        lastHistoryRecord.setClosingComment(closingComment);
-        lastHistoryRecord.setUser(currentUser);
-
-        statusHistoryRepository.save(lastHistoryRecord);
-    }
-
     /**
      * TODO FIX LOGIC WITH STATUS CHANGE FOR COMMENTS AND STUFF
      */
@@ -63,8 +51,14 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         try {
             String currentUser = UserUtil.getCurrentUser();
-            setComment(id, closingComment, currentUser);
+
+            List<OrderStatusHistory> historyList = orderRecord.getStatusHistory();
+            var lastHistoryRecord = historyList.get(historyList.size() - 1);
+            lastHistoryRecord.setClosingComment(closingComment);
+            lastHistoryRecord.setUser(currentUser);
+            orderRecord.setStatusHistory(historyList);
             orderRecord.nextStatus(postalCode, postalService);
+
             orderRepository.save(orderRecord);
         } catch (IllegalStateException error) {
             System.out.println(error.getMessage());
