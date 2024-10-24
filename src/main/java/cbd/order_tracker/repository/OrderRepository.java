@@ -17,7 +17,7 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 
     List<OrderRecord> findByStatusIn(List<OrderStatus> statuses);
 
-    Iterable<OrderRecord> findByNameContainingOrDescriptionContaining(String searchTerm, String searchTerm1);
+    Page<OrderRecord> findByNameContainingOrDescriptionContaining(String nameTerm, String descriptionTerm, Pageable pageable);
 
     Page<OrderRecord> findAllByStatusIn(List<OrderStatus> statuses, Pageable pageable);
 }

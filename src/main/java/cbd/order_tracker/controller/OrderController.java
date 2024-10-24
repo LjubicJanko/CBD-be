@@ -37,18 +37,13 @@ public class OrderController {
 
 
     @GetMapping("/getPageable")
-    public ResponseEntity<PageableResponse<OrderOverviewDto>> getAllPageable(@RequestParam(required = false) List<OrderStatus> statuses,
-                                                         @RequestParam(required = true) Integer page,
-                                                         @RequestParam(required = true) Integer perPage
-                                                         ) {
+    public ResponseEntity<PageableResponse<OrderOverviewDto>> getAllPageable(@RequestParam(required = false) List<OrderStatus> statuses, @RequestParam(required = true) Integer page, @RequestParam(required = true) Integer perPage) {
         return new ResponseEntity<PageableResponse<OrderOverviewDto>>(orderService.getAllPageable(statuses, page, perPage), HttpStatus.OK);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<OrderOverviewDto>> search(
-            @RequestParam(required = false) String searchTerm) {
-        List<OrderOverviewDto> orders = orderService.searchOrders(searchTerm);
-        return new ResponseEntity<>(orders, HttpStatus.OK);
+    public ResponseEntity<PageableResponse<OrderOverviewDto>> search(@RequestParam(required = false) String searchTerm, @RequestParam(required = true) Integer page, @RequestParam(required = true) Integer perPage) {
+        return new ResponseEntity<PageableResponse<OrderOverviewDto>>(orderService.searchOrders(searchTerm, page, perPage), HttpStatus.OK);
     }
 
     @GetMapping("/track/{trackingId}")
@@ -66,6 +61,11 @@ public class OrderController {
     public OrderDTO updateOrder(@PathVariable Long id, @RequestBody OrderRecord order) {
         order.setId(id);
         return orderService.updateOrder(order);
+    }
+
+    @PutMapping("/pause/{id}")
+    public OrderDTO pauseOrder(@PathVariable Long id, @RequestBody String pausingComment) {
+        return orderService.pauseOrder(id, pausingComment);
     }
 
     // Updated changeStatus to accept optional fields via request body

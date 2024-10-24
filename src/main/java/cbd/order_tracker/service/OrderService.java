@@ -1,9 +1,6 @@
 package cbd.order_tracker.service;
 
-import cbd.order_tracker.model.OrderRecord;
-import cbd.order_tracker.model.OrderStatus;
-import cbd.order_tracker.model.OrderStatusHistory;
-import cbd.order_tracker.model.Payment;
+import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.OrderDTO;
 import cbd.order_tracker.model.dto.OrderOverviewDto;
 import cbd.order_tracker.model.dto.OrderTrackingDTO;
@@ -40,6 +37,17 @@ public class OrderService {
 
     public OrderDTO updateOrder(OrderRecord order) {
         OrderRecord orderRecord = orderRepository.save(order);
+        return OrderMapper.toDto(orderRecord);
+    }
+
+    public OrderDTO pauseOrder(Long id, String pausingComment) {
+        OrderRecord orderRecord = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        orderRecord.setExecutionStatus(OrderExecutionStatus.PAUSED);
+        orderRecord.setPausingComment(pausingComment);
+
+        orderRepository.save(orderRecord);
         return OrderMapper.toDto(orderRecord);
     }
 
@@ -141,26 +149,20 @@ public class OrderService {
         return statusHistoryRepository.findByOrderId(orderId);
     }
 
-    public List<OrderOverviewDto> searchOrders(String searchTerm) {
-        Iterable<OrderRecord> ordersIterable;
+    public PageableResponse<OrderOverviewDto> searchOrders(String searchTerm, Integer page, Integer perPage) {
+        Pageable pageRequest = PageRequest.of(page, perPage);
+        Page<OrderRecord> orderRecords;
 
         if (searchTerm == null || searchTerm.isEmpty()) {
-            // Get all orders if no search term is provided
-            ordersIterable = orderRepository.findAll();
+            orderRecords = orderRepository.findAll(pageRequest);
         } else {
-            // Perform the search with the custom query method
-            ordersIterable = orderRepository.findByNameContainingOrDescriptionContaining(searchTerm, searchTerm);
+            orderRecords = orderRepository.findByNameContainingOrDescriptionContaining(searchTerm, searchTerm, pageRequest);
         }
 
-        // Convert the Iterable to a List using StreamSupport
-        List<OrderRecord> orders = StreamSupport
-                .stream(ordersIterable.spliterator(), false)
-                .collect(Collectors.toList());
-
-        // Map to DTO and return
-        return orders.stream()
+        var orderOverviewDtos = orderRecords.stream()
                 .map(OrderMapper::toOverviewDto)
                 .collect(Collectors.toList());
 
+        return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(), orderOverviewDtos);
     }
 }

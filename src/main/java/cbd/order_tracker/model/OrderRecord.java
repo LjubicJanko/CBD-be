@@ -20,6 +20,7 @@ public class OrderRecord {
     private String description;
     private String plannedEndingDate;
     private String trackingId;
+    private String pausingComment;
 
     @Column(name = "legal_entity", nullable = false)
     private boolean legalEntity;
@@ -48,6 +49,9 @@ public class OrderRecord {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private OrderExecutionStatus executionStatus;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<OrderStatusHistory> statusHistory;
 
@@ -70,6 +74,7 @@ public class OrderRecord {
         this.amountLeftToPay = order.getSalePrice();
         this.amountLeftToPayWithTax = salePriceWithTax;
         this.status = OrderStatus.DESIGN;
+        this.executionStatus = OrderExecutionStatus.ACTIVE;
         this.statusHistory = new ArrayList<>();
         this.payments = new ArrayList<>();
         addStatusHistory(status, null, null);
@@ -132,6 +137,14 @@ public class OrderRecord {
 
     public String getTrackingId() {
         return trackingId;
+    }
+
+    public String getPausingComment() {
+        return pausingComment;
+    }
+
+    public void setPausingComment(String pausingComment) {
+        this.pausingComment = pausingComment;
     }
 
     public void setTrackingId(String trackingId) {
@@ -208,6 +221,14 @@ public class OrderRecord {
 
     public void setStatus(OrderStatus status) {
         this.status = status;
+    }
+
+    public OrderExecutionStatus getExecutionStatus() {
+        return executionStatus;
+    }
+
+    public void setExecutionStatus(OrderExecutionStatus executionStatus) {
+        this.executionStatus = executionStatus;
     }
 
     public List<OrderStatusHistory> getStatusHistory() {
