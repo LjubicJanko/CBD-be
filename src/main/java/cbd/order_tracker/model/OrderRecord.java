@@ -96,7 +96,7 @@ public class OrderRecord {
             // TODO: Handle the error
             return;
         }
-        Payment newPayment = new Payment(this, payment.getName(), paymentAmount, payment.getType(), payment.getNote());
+        Payment newPayment = new Payment(this, payment.getPayer(), paymentAmount, payment.getPaymentMethod(), payment.getNote());
         this.payments.add(newPayment);
         this.amountPaid = this.amountPaid.add(newPayment.getAmount());
         this.amountLeftToPay = this.salePrice.subtract(this.amountPaid);

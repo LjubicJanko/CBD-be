@@ -4,7 +4,8 @@ public enum OrderStatus {
     DESIGN,
     PRINT_READY,
     PRINTING,
-    PRINTED,
+    SEWING,
+    SHIP_READY,
     SHIPPED,
     DONE;
 
@@ -12,8 +13,9 @@ public enum OrderStatus {
         switch (this) {
             case DESIGN: return PRINT_READY;
             case PRINT_READY: return PRINTING;
-            case PRINTING: return PRINTED;
-            case PRINTED: return SHIPPED;
+            case PRINTING: return SEWING;
+            case SEWING: return SHIP_READY;
+            case SHIP_READY: return SHIPPED;
             case SHIPPED: return DONE;
             default: throw new IllegalStateException("No further transitions allowed from " + this);
         }

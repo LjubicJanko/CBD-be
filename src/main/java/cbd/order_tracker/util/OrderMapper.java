@@ -5,6 +5,8 @@ import cbd.order_tracker.model.dto.OrderDTO;
 import cbd.order_tracker.model.dto.OrderOverviewDto;
 import cbd.order_tracker.model.dto.OrderTrackingDTO;
 
+import java.math.BigDecimal;
+
 public class OrderMapper {
 
     public static OrderDTO toDto(OrderRecord orderRecord) {
@@ -13,17 +15,22 @@ public class OrderMapper {
         dto.setName(orderRecord.getName());
         dto.setDescription(orderRecord.getDescription());
         dto.setStatus(orderRecord.getStatus());
+        dto.setExecutionStatus(orderRecord.getExecutionStatus());
+        dto.setPausingComment(orderRecord.getPausingComment());
         dto.setTrackingId(orderRecord.getTrackingId());
         dto.setStatusHistory(orderRecord.getStatusHistory());
         dto.setAcquisitionCost(orderRecord.getAcquisitionCost());
-        dto.setAmountLeftToPay(orderRecord.getAmountLeftToPay());
         dto.setAmountPaid(orderRecord.getAmountPaid());
-        dto.setAmountLeftToPayWithTax(orderRecord.getAmountLeftToPayWithTax());
         dto.setLegalEntity(orderRecord.isLegalEntity());
+
+        BigDecimal salePrice = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
+        BigDecimal priceDifference = salePrice.subtract(orderRecord.getAcquisitionCost());
+        BigDecimal amountLefToPay = priceDifference.subtract(orderRecord.getAmountPaid());
+
+        dto.setSalePrice(salePrice);
         dto.setPriceDifference(orderRecord.getPriceDifference());
-        dto.setSalePrice(orderRecord.getSalePrice());
+        dto.setAmountLeftToPay(amountLefToPay);
         dto.setPlannedEndingDate(orderRecord.getPlannedEndingDate());
-        dto.setSalePriceWithTax(orderRecord.getSalePriceWithTax());
         dto.setPayments(orderRecord.getPayments());
 
         return dto;

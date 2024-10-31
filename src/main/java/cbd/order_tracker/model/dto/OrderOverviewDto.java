@@ -1,5 +1,6 @@
 package cbd.order_tracker.model.dto;
 
+import cbd.order_tracker.model.OrderExecutionStatus;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
 
@@ -10,6 +11,7 @@ public class OrderOverviewDto {
     private String description;
     private String plannedEndingDate;
     private OrderStatus status;
+    private OrderExecutionStatus executionStatus;
 
     public OrderOverviewDto() {
     }
@@ -20,6 +22,7 @@ public class OrderOverviewDto {
         this.description = orderRecord.getDescription();
         this.plannedEndingDate = orderRecord.getPlannedEndingDate();
         this.status = orderRecord.getStatus();
+        this.executionStatus = orderRecord.getExecutionStatus();
     }
 
     // Getters and Setters
@@ -63,4 +66,11 @@ public class OrderOverviewDto {
         this.status = status;
     }
 
+    public OrderExecutionStatus getExecutionStatus() {
+        return executionStatus;
+    }
+
+    public void setExecutionStatus(OrderExecutionStatus executionStatus) {
+        this.executionStatus = executionStatus;
+    }
 }

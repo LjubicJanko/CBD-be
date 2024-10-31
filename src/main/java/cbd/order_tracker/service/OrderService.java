@@ -36,8 +36,17 @@ public class OrderService {
     }
 
     public OrderDTO updateOrder(OrderRecord order) {
-        OrderRecord orderRecord = orderRepository.save(order);
-        return OrderMapper.toDto(orderRecord);
+        OrderRecord orderRecord = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        orderRecord.setName(order.getName());
+        orderRecord.setDescription(order.getDescription());
+        orderRecord.setSalePrice(order.getSalePrice());
+        orderRecord.setAcquisitionCost(order.getAcquisitionCost());
+        orderRecord.setPlannedEndingDate(order.getPlannedEndingDate());
+        orderRecord.setLegalEntity(order.isLegalEntity());
+
+
+        return OrderMapper.toDto(orderRepository.save(orderRecord));
     }
 
     public OrderDTO pauseOrder(Long id, String pausingComment) {
@@ -111,7 +120,8 @@ public class OrderService {
                 .map(OrderMapper::toOverviewDto)
                 .collect(Collectors.toList());
 
-        return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(), orderOverviewDtos);
+        return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(),
+                orderRecords.getTotalElements(), orderOverviewDtos);
     }
 
     public List<OrderDTO> getAll(List<OrderStatus> statuses) {
@@ -163,6 +173,7 @@ public class OrderService {
                 .map(OrderMapper::toOverviewDto)
                 .collect(Collectors.toList());
 
-        return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(), orderOverviewDtos);
+        return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(),
+                orderRecords.getTotalElements(), orderOverviewDtos);
     }
 }

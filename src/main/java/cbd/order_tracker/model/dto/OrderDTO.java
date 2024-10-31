@@ -1,5 +1,6 @@
 package cbd.order_tracker.model.dto;
 
+import cbd.order_tracker.model.OrderExecutionStatus;
 import cbd.order_tracker.model.OrderStatus;
 import cbd.order_tracker.model.OrderStatusHistory;
 import cbd.order_tracker.model.Payment;
@@ -13,7 +14,9 @@ public class OrderDTO {
     private String name;
     private String description;
     private String plannedEndingDate;
+    private String pausingComment;
     private OrderStatus status;
+    private OrderExecutionStatus executionStatus;
     private String trackingId;
     private List<OrderStatusHistory> statusHistory;
     private List<Payment> payments;
@@ -22,12 +25,10 @@ public class OrderDTO {
 
     // Use BigDecimal for monetary values
     private BigDecimal acquisitionCost;
-    private BigDecimal salePrice;
-    private BigDecimal salePriceWithTax;
+    private BigDecimal salePrice; // this should be calculated based on info if it is legal entity or not
     private BigDecimal priceDifference;
     private BigDecimal amountPaid;
-    private BigDecimal amountLeftToPay;
-    private BigDecimal amountLeftToPayWithTax;
+    private BigDecimal amountLeftToPay; // this should be calculated based on info if it is legal entity or not
 
     public OrderDTO() {
     }
@@ -113,14 +114,6 @@ public class OrderDTO {
         this.salePrice = salePrice;
     }
 
-    public BigDecimal getSalePriceWithTax() {
-        return salePriceWithTax;
-    }
-
-    public void setSalePriceWithTax(BigDecimal salePriceWithTax) {
-        this.salePriceWithTax = salePriceWithTax;
-    }
-
     public BigDecimal getPriceDifference() {
         return priceDifference;
     }
@@ -145,19 +138,27 @@ public class OrderDTO {
         this.amountLeftToPay = amountLeftToPay;
     }
 
-    public BigDecimal getAmountLeftToPayWithTax() {
-        return amountLeftToPayWithTax;
-    }
-
-    public void setAmountLeftToPayWithTax(BigDecimal amountLeftToPayWithTax) {
-        this.amountLeftToPayWithTax = amountLeftToPayWithTax;
-    }
-
     public List<Payment> getPayments() {
         return payments;
     }
 
     public void setPayments(List<Payment> payments) {
         this.payments = payments;
+    }
+
+    public String getPausingComment() {
+        return pausingComment;
+    }
+
+    public void setPausingComment(String pausingComment) {
+        this.pausingComment = pausingComment;
+    }
+
+    public OrderExecutionStatus getExecutionStatus() {
+        return executionStatus;
+    }
+
+    public void setExecutionStatus(OrderExecutionStatus executionStatus) {
+        this.executionStatus = executionStatus;
     }
 }
