@@ -1,12 +1,10 @@
 package cbd.order_tracker.controller;
 
+import cbd.order_tracker.model.OrderExecutionStatus;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
 import cbd.order_tracker.model.Payment;
-import cbd.order_tracker.model.dto.OrderDTO;
-import cbd.order_tracker.model.dto.OrderOverviewDto;
-import cbd.order_tracker.model.dto.OrderTrackingDTO;
-import cbd.order_tracker.model.dto.PageableResponse;
+import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.service.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,9 +61,19 @@ public class OrderController {
         return orderService.updateOrder(order);
     }
 
+    @PutMapping("/changeExecutionStatus/{id}")
+    public OrderDTO changeExecutionStatus(@PathVariable Long id, @RequestBody ChangeExecutionStatusRequestDto request) {
+        return orderService.changeExecutionStatus(id, request.getExecutionStatus(), request.getNote());
+    }
+
     @PutMapping("/pause/{id}")
     public OrderDTO pauseOrder(@PathVariable Long id, @RequestBody String pausingComment) {
         return orderService.pauseOrder(id, pausingComment);
+    }
+
+    @PutMapping("/reactivate/{id}")
+    public OrderDTO reactivateOrder(@PathVariable Long id) {
+        return orderService.reactivateOrder(id);
     }
 
     // Updated changeStatus to accept optional fields via request body

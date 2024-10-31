@@ -49,12 +49,32 @@ public class OrderService {
         return OrderMapper.toDto(orderRepository.save(orderRecord));
     }
 
+    public OrderDTO changeExecutionStatus(Long id, OrderExecutionStatus executionStatus, String note) {
+        OrderRecord orderRecord = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        orderRecord.setExecutionStatus(executionStatus);
+        orderRecord.setPausingComment(note);
+
+        orderRepository.save(orderRecord);
+        return OrderMapper.toDto(orderRecord);
+    }
+
     public OrderDTO pauseOrder(Long id, String pausingComment) {
         OrderRecord orderRecord = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         orderRecord.setExecutionStatus(OrderExecutionStatus.PAUSED);
         orderRecord.setPausingComment(pausingComment);
+
+        orderRepository.save(orderRecord);
+        return OrderMapper.toDto(orderRecord);
+    }
+    public OrderDTO reactivateOrder(Long id) {
+        OrderRecord orderRecord = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        orderRecord.setExecutionStatus(OrderExecutionStatus.ACTIVE);
 
         orderRepository.save(orderRecord);
         return OrderMapper.toDto(orderRecord);
