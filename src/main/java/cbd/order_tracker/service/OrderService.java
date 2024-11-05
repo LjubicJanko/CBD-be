@@ -7,15 +7,15 @@ import cbd.order_tracker.model.dto.OrderTrackingDTO;
 import cbd.order_tracker.model.dto.PageableResponse;
 import cbd.order_tracker.repository.OrderRepository;
 import cbd.order_tracker.repository.OrderStatusHistoryRepository;
+import cbd.order_tracker.util.OrderMapper;
 import cbd.order_tracker.util.UserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import cbd.order_tracker.util.OrderMapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -70,6 +70,7 @@ public class OrderService {
         orderRepository.save(orderRecord);
         return OrderMapper.toDto(orderRecord);
     }
+
     public OrderDTO reactivateOrder(Long id) {
         OrderRecord orderRecord = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -125,23 +126,33 @@ public class OrderService {
         return OrderMapper.toDto(orderRecord);
     }
 
-    public PageableResponse<OrderOverviewDto> getAllPageable(List<OrderStatus> statuses, Integer page, Integer perPage) {
-        Pageable pageRequest = PageRequest.of(page, perPage);
+    public PageableResponse<OrderOverviewDto> getAllPageable(
+            List<OrderStatus> statuses,
+            List<OrderExecutionStatus> executionStatuses,
+            Integer page,
+            Integer perPage) {
+        Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(Sort.Direction.ASC, "creationTime"));
 
         Page<OrderRecord> orderRecords;
 
-        if (statuses != null && !statuses.isEmpty()) {
-            orderRecords = orderRepository.findAllByStatusIn(statuses, pageRequest);
-        } else {
+        if((executionStatuses.isEmpty() && statuses.isEmpty())) {
             orderRecords = orderRepository.findAll(pageRequest);
+        } else {
+            if(executionStatuses == null || executionStatuses.isEmpty()) {
+                orderRecords = orderRepository.findAllByStatusIn(statuses, pageRequest);
+            } else if(statuses == null || statuses.isEmpty()) {
+                orderRecords = orderRepository.findAllByExecutionStatusIn(executionStatuses, pageRequest);
+            } else {
+                orderRecords = orderRepository.findAllByStatusInAndExecutionStatusIn(statuses, executionStatuses, pageRequest);
+            }
         }
-
         var orderOverviewDtos = orderRecords.stream()
                 .map(OrderMapper::toOverviewDto)
                 .collect(Collectors.toList());
 
         return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(),
                 orderRecords.getTotalElements(), orderOverviewDtos);
+
     }
 
     public List<OrderDTO> getAll(List<OrderStatus> statuses) {

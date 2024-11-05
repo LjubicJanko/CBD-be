@@ -35,9 +35,21 @@ public class OrderController {
 
 
     @GetMapping("/getPageable")
-    public ResponseEntity<PageableResponse<OrderOverviewDto>> getAllPageable(@RequestParam(required = false) List<OrderStatus> statuses, @RequestParam(required = true) Integer page, @RequestParam(required = true) Integer perPage) {
-        return new ResponseEntity<PageableResponse<OrderOverviewDto>>(orderService.getAllPageable(statuses, page, perPage), HttpStatus.OK);
+    public ResponseEntity<PageableResponse<OrderOverviewDto>> getAllPageable(
+            @RequestParam(required = false) List<OrderStatus> statuses,
+            @RequestParam(required = true) Integer page,
+            @RequestParam(required = true) Integer perPage,
+            @RequestParam(required = false) List<OrderExecutionStatus> executionStatuses) {
+
+        // Use default filter if no executionStatuses are provided
+        if (executionStatuses == null || executionStatuses.isEmpty()) {
+            executionStatuses = List.of(OrderExecutionStatus.ACTIVE, OrderExecutionStatus.PAUSED);
+        }
+
+        PageableResponse<OrderOverviewDto> response = orderService.getAllPageable(statuses, executionStatuses, page, perPage);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @GetMapping("/search")
     public ResponseEntity<PageableResponse<OrderOverviewDto>> search(@RequestParam(required = false) String searchTerm, @RequestParam(required = true) Integer page, @RequestParam(required = true) Integer perPage) {

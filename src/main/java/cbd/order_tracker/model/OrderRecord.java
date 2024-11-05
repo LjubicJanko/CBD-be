@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +22,7 @@ public class OrderRecord {
     private String plannedEndingDate;
     private String trackingId;
     private String pausingComment;
+    private LocalDateTime creationTime;
 
     @Column(name = "legal_entity", nullable = false)
     private boolean legalEntity;
@@ -73,6 +75,7 @@ public class OrderRecord {
         this.amountPaid = BigDecimal.ZERO;
         this.amountLeftToPay = order.getSalePrice();
         this.amountLeftToPayWithTax = salePriceWithTax;
+        this.creationTime = LocalDateTime.now();
         this.status = OrderStatus.DESIGN;
         this.executionStatus = OrderExecutionStatus.ACTIVE;
         this.statusHistory = new ArrayList<>();
@@ -213,6 +216,14 @@ public class OrderRecord {
 
     public void setAmountLeftToPayWithTax(BigDecimal amountLeftToPayWithTax) {
         this.amountLeftToPayWithTax = amountLeftToPayWithTax;
+    }
+
+    public LocalDateTime getCreationTime() {
+        return creationTime;
+    }
+
+    public void setCreationTime(LocalDateTime creationTime) {
+        this.creationTime = creationTime;
     }
 
     public OrderStatus getStatus() {
