@@ -103,7 +103,7 @@ public class OrderController {
         return new ResponseEntity<>(orderService.addPayment(id, payment), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public void deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
     }

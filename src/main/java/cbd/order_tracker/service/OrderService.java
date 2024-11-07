@@ -131,7 +131,7 @@ public class OrderService {
             List<OrderExecutionStatus> executionStatuses,
             Integer page,
             Integer perPage) {
-        Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(Sort.Direction.ASC, "creationTime"));
+        Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(Sort.Direction.DESC, "creationTime"));
 
         Page<OrderRecord> orderRecords;
 
