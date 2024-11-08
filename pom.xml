@@ -71,11 +71,11 @@
 <!--			<artifactId>lombok</artifactId>-->
 <!--			<optional>true</optional>-->
 <!--		</dependency>-->
-		<dependency>
-			<groupId>cbd</groupId>
-			<artifactId>order-tracker</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>cbd</groupId>-->
+<!--			<artifactId>order-tracker</artifactId>-->
+<!--			<version>0.0.1-SNAPSHOT</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>
