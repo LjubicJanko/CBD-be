@@ -4,6 +4,14 @@ public class RegisterUserDto {
     private String username;
     private String password;
     private String fullName;
+    private String role;
+
+    public RegisterUserDto(String username, String password, String fullName, String role) {
+        this.username = username;
+        this.password = password;
+        this.fullName = fullName;
+        this.role = role;
+    }
 
     public String getUsername() {
         return username;
@@ -12,6 +20,14 @@ public class RegisterUserDto {
     public RegisterUserDto setUsername(String username) {
         this.username = username;
         return this;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public String getPassword() {
