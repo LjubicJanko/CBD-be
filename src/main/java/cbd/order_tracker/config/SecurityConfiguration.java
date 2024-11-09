@@ -51,39 +51,39 @@ public class SecurityConfiguration {
     }
 //    https://cbd-bhioqhji1-ljubicjankos-projects.vercel.app/
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*")); // Allow all origins temporarily
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
-    }
-
 //    @Bean
-//    CorsConfigurationSource corsConfigurationSource() {
+//    public CorsConfigurationSource corsConfigurationSource() {
 //        CorsConfiguration configuration = new CorsConfiguration();
-//
-//
-//        // Allow requests from localhost and Vercel app
-//        configuration.setAllowedOrigins(List.of(
-//                "http://localhost:5173",
-//                "https://cbd-fe.vercel.app",
-//                "https://cbd-fe-ljubicjankos-projects.vercel.app"
-//        ));
+//        configuration.setAllowedOrigins(List.of("*")); // Allow all origins temporarily
 //        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
 //        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 //
 //        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//
-//        source.registerCorsConfiguration("/**",configuration);
-//
+//        source.registerCorsConfiguration("/**", configuration);
 //
 //        return source;
 //    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+
+        // Allow requests from localhost and Vercel app
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://cbd-fe.vercel.app",
+                "https://cbd-fe-ljubicjankos-projects.vercel.app"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**",configuration);
+
+
+        return source;
+    }
 
 }
