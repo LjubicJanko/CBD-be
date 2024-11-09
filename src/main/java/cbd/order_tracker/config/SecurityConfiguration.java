@@ -33,8 +33,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf()
                 .disable()
-                .cors()
-                .and()
+//                .cors()
+//                .and()
                 .authorizeHttpRequests()
                 .requestMatchers("/api/auth/**", "/api/orders/track/**")
                 .permitAll()
@@ -50,24 +50,24 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-
-        // Allow requests from localhost and Vercel app
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "https://cbd-fe.vercel.app/" // Replace with your actual Vercel app URL
-        ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration("/**",configuration);
-
-
-        return source;
-    }
+//    @Bean
+//    CorsConfigurationSource corsConfigurationSource() {
+//        CorsConfiguration configuration = new CorsConfiguration();
+//
+//
+//        // Allow requests from localhost and Vercel app
+//        configuration.setAllowedOrigins(List.of(
+//                "http://localhost:5173",
+//                "https://cbd-fe.vercel.app/" // Replace with your actual Vercel app URL
+//        ));
+//        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+//        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//
+//        source.registerCorsConfiguration("/**",configuration);
+//
+//
+//        return source;
+//    }
 }
