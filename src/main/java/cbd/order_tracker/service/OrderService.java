@@ -123,10 +123,12 @@ public class OrderService {
 
 	public PageableResponse<OrderOverviewDto> getAllPageable(
 			List<OrderStatus> statuses,
+			String sort,
 			List<OrderExecutionStatus> executionStatuses,
 			Integer page,
 			Integer perPage) {
-		Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(Sort.Direction.DESC, "creationTime"));
+		var direction = sort.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+		Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(direction, "creationTime"));
 
 		Page<OrderRecord> orderRecords;
 
