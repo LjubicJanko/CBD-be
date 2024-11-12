@@ -174,7 +174,6 @@ public class OrderService {
 		List<OrderStatusHistory> history = getOrderStatusHistory(orderRecord.getId());
 		orderRecord.setStatusHistory(history);
 		return OrderMapper.toOrderTrackingDTO(orderRecord);
-
 	}
 
 	public void deleteOrder(Long id) {
