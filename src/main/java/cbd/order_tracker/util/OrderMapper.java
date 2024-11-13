@@ -1,16 +1,21 @@
 package cbd.order_tracker.util;
 
 import cbd.order_tracker.model.OrderRecord;
+import cbd.order_tracker.model.Role;
 import cbd.order_tracker.model.dto.OrderDTO;
 import cbd.order_tracker.model.dto.OrderOverviewDto;
 import cbd.order_tracker.model.dto.OrderTrackingDTO;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 
 public class OrderMapper {
 
 	public static OrderDTO toDto(OrderRecord orderRecord) {
 		OrderDTO dto = new OrderDTO();
+		Collection<Role> roles = UserUtil.getCurrentUserRoles();
+		Boolean isAdmin = roles.stream().anyMatch(role -> "admin".equals(role.getName()));
+
 		dto.setId(orderRecord.getId());
 		dto.setName(orderRecord.getName());
 		dto.setDescription(orderRecord.getDescription());
@@ -20,19 +25,21 @@ public class OrderMapper {
 		dto.setTrackingId(orderRecord.getTrackingId());
 		dto.setStatusHistory(orderRecord.getStatusHistory());
 		dto.setAcquisitionCost(orderRecord.getAcquisitionCost());
-		dto.setAmountPaid(orderRecord.getAmountPaid());
 		dto.setLegalEntity(orderRecord.isLegalEntity());
-
-		BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
-		BigDecimal priceDifference = priceForCalculation.subtract(orderRecord.getAcquisitionCost());
-		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
-
-		dto.setSalePrice(orderRecord.getSalePrice());
-		dto.setSalePriceWithTax(orderRecord.getSalePriceWithTax());
-		dto.setPriceDifference(priceDifference);
-		dto.setAmountLeftToPay(amountLefToPay);
 		dto.setPlannedEndingDate(orderRecord.getPlannedEndingDate());
-		dto.setPayments(orderRecord.getPayments());
+
+		if (isAdmin) {
+			BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
+			BigDecimal priceDifference = priceForCalculation.subtract(orderRecord.getAcquisitionCost());
+			BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
+
+			dto.setAmountPaid(orderRecord.getAmountPaid());
+			dto.setSalePrice(orderRecord.getSalePrice());
+			dto.setSalePriceWithTax(orderRecord.getSalePriceWithTax());
+			dto.setPriceDifference(priceDifference);
+			dto.setAmountLeftToPay(amountLefToPay);
+			dto.setPayments(orderRecord.getPayments());
+		}
 
 		return dto;
 	}
