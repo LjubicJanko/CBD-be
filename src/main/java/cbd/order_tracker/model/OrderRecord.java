@@ -2,6 +2,8 @@ package cbd.order_tracker.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,251 +12,262 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
+@SQLRestriction("deleted = false")
 public class OrderRecord {
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private String name;
-    private String description;
-    private String plannedEndingDate;
-    private String trackingId;
-    private String pausingComment;
-    private LocalDateTime creationTime;
+	private String name;
+	private String description;
+	private String plannedEndingDate;
+	private String trackingId;
+	private String pausingComment;
+	private LocalDateTime creationTime;
+	private boolean deleted = false;
 
-    @Column(name = "legal_entity", nullable = false)
-    private boolean legalEntity;
+	@Column(name = "legal_entity", nullable = false)
+	private boolean legalEntity;
 
-    @Column(precision = 19, scale = 4)
-    private BigDecimal acquisitionCost;
+	@Column(precision = 19, scale = 4)
+	private BigDecimal acquisitionCost;
 
-    @Column(precision = 19, scale = 4)
-    private BigDecimal salePrice;
+	@Column(precision = 19, scale = 4)
+	private BigDecimal salePrice;
 
-    @Column(precision = 19, scale = 4)
-    private BigDecimal salePriceWithTax;
+	@Column(precision = 19, scale = 4)
+	private BigDecimal salePriceWithTax;
 
-    @Column(precision = 19, scale = 4)
-    private BigDecimal priceDifference;
+	@Column(precision = 19, scale = 4)
+	private BigDecimal priceDifference;
 
-    @Column(precision = 19, scale = 4)
-    private BigDecimal amountPaid;
+	@Column(precision = 19, scale = 4)
+	private BigDecimal amountPaid;
 
-    @Column(precision = 19, scale = 4)
-    private BigDecimal amountLeftToPay;
+	@Column(precision = 19, scale = 4)
+	private BigDecimal amountLeftToPay;
 
-    @Column(precision = 19, scale = 4)
-    private BigDecimal amountLeftToPayWithTax;
+	@Column(precision = 19, scale = 4)
+	private BigDecimal amountLeftToPayWithTax;
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+	@Enumerated(EnumType.STRING)
+	private OrderStatus status;
 
-    @Enumerated(EnumType.STRING)
-    private OrderExecutionStatus executionStatus;
+	@Enumerated(EnumType.STRING)
+	private OrderExecutionStatus executionStatus;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<OrderStatusHistory> statusHistory;
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private List<OrderStatusHistory> statusHistory;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<Payment> payments;
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private List<Payment> payments;
 
-    public OrderRecord() {}
+	public OrderRecord() {
+	}
 
-    public OrderRecord(OrderRecord order) {
-        this.name = order.getName();
-        this.description = order.getDescription();
-        this.plannedEndingDate = order.getPlannedEndingDate();
-        this.trackingId = UUID.randomUUID().toString();
-        this.legalEntity = order.isLegalEntity();
-        this.acquisitionCost = order.getAcquisitionCost();
-        this.salePrice = order.getSalePrice();
-        this.salePriceWithTax = order.getSalePrice().multiply(BigDecimal.valueOf(1.2));
-        this.priceDifference = order.getSalePrice().subtract(acquisitionCost);
-        this.amountPaid = BigDecimal.ZERO;
-        this.amountLeftToPay = order.getSalePrice();
-        this.amountLeftToPayWithTax = salePriceWithTax;
-        this.creationTime = LocalDateTime.now();
-        this.status = OrderStatus.DESIGN;
-        this.executionStatus = OrderExecutionStatus.ACTIVE;
-        this.statusHistory = new ArrayList<>();
-        this.payments = new ArrayList<>();
-        addStatusHistory(status, null, null);
-    }
+	public OrderRecord(OrderRecord order) {
+		this.name = order.getName();
+		this.description = order.getDescription();
+		this.plannedEndingDate = order.getPlannedEndingDate();
+		this.trackingId = UUID.randomUUID().toString();
+		this.legalEntity = order.isLegalEntity();
+		this.acquisitionCost = order.getAcquisitionCost();
+		this.salePrice = order.getSalePrice();
+		this.salePriceWithTax = order.getSalePrice().multiply(BigDecimal.valueOf(1.2));
+		this.priceDifference = order.getSalePrice().subtract(acquisitionCost);
+		this.amountPaid = BigDecimal.ZERO;
+		this.amountLeftToPay = order.getSalePrice();
+		this.amountLeftToPayWithTax = salePriceWithTax;
+		this.creationTime = LocalDateTime.now();
+		this.status = OrderStatus.DESIGN;
+		this.executionStatus = OrderExecutionStatus.ACTIVE;
+		this.statusHistory = new ArrayList<>();
+		this.payments = new ArrayList<>();
+		addStatusHistory(status, null, null);
+	}
 
 
-    public void nextStatus(String postalCode, String postalService) {
-        this.status = this.status.next();
-        addStatusHistory(status, postalCode, postalService);
-    }
+	public void nextStatus(String postalCode, String postalService) {
+		this.status = this.status.next();
+		addStatusHistory(status, postalCode, postalService);
+	}
 
-    private void addStatusHistory(OrderStatus newStatus, String postalCode, String postalService) {
-        statusHistory.add(new OrderStatusHistory(this, newStatus, postalCode, postalService));
-    }
+	private void addStatusHistory(OrderStatus newStatus, String postalCode, String postalService) {
+		statusHistory.add(new OrderStatusHistory(this, newStatus, postalCode, postalService));
+	}
 
-    public void addPayment(Payment payment) {
-        BigDecimal paymentAmount = payment.getAmount();
-        if (paymentAmount.compareTo(this.getAmountLeftToPay()) > 0 && paymentAmount.compareTo(this.getAmountLeftToPayWithTax()) > 0) {
-            // TODO: Handle the error
-            return;
-        }
-        Payment newPayment = new Payment(this, payment.getPayer(), paymentAmount, payment.getPaymentMethod(), payment.getNote());
-        this.payments.add(newPayment);
-        this.amountPaid = this.amountPaid.add(newPayment.getAmount());
-        this.amountLeftToPay = this.salePrice.subtract(this.amountPaid);
-        this.amountLeftToPayWithTax = this.salePriceWithTax.subtract(this.amountPaid);
-    }
+	public void addPayment(Payment payment) {
+		BigDecimal paymentAmount = payment.getAmount();
+		if (paymentAmount.compareTo(this.getAmountLeftToPay()) > 0 && paymentAmount.compareTo(this.getAmountLeftToPayWithTax()) > 0) {
+			// TODO: Handle the error
+			return;
+		}
+		Payment newPayment = new Payment(this, payment.getPayer(), paymentAmount, payment.getPaymentMethod(), payment.getNote());
+		this.payments.add(newPayment);
+		this.amountPaid = this.amountPaid.add(newPayment.getAmount());
+		this.amountLeftToPay = this.salePrice.subtract(this.amountPaid);
+		this.amountLeftToPayWithTax = this.salePriceWithTax.subtract(this.amountPaid);
+	}
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public boolean isDeleted() {
+		return deleted;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getPlannedEndingDate() {
-        return plannedEndingDate;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public void setPlannedEndingDate(String plannedEndingDate) {
-        this.plannedEndingDate = plannedEndingDate;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public String getTrackingId() {
-        return trackingId;
-    }
+	public String getPlannedEndingDate() {
+		return plannedEndingDate;
+	}
 
-    public String getPausingComment() {
-        return pausingComment;
-    }
+	public void setPlannedEndingDate(String plannedEndingDate) {
+		this.plannedEndingDate = plannedEndingDate;
+	}
 
-    public void setPausingComment(String pausingComment) {
-        this.pausingComment = pausingComment;
-    }
+	public String getTrackingId() {
+		return trackingId;
+	}
 
-    public void setTrackingId(String trackingId) {
-        this.trackingId = trackingId;
-    }
+	public String getPausingComment() {
+		return pausingComment;
+	}
 
-    public boolean isLegalEntity() {
-        return legalEntity;
-    }
+	public void setPausingComment(String pausingComment) {
+		this.pausingComment = pausingComment;
+	}
 
-    public void setLegalEntity(boolean legalEntity) {
-        this.legalEntity = legalEntity;
-    }
+	public void setTrackingId(String trackingId) {
+		this.trackingId = trackingId;
+	}
 
-    public BigDecimal getAcquisitionCost() {
-        return acquisitionCost;
-    }
+	public boolean isLegalEntity() {
+		return legalEntity;
+	}
 
-    public void setAcquisitionCost(BigDecimal acquisitionCost) {
-        this.acquisitionCost = acquisitionCost;
-    }
+	public void setLegalEntity(boolean legalEntity) {
+		this.legalEntity = legalEntity;
+	}
 
-    public BigDecimal getSalePrice() {
-        return salePrice;
-    }
+	public BigDecimal getAcquisitionCost() {
+		return acquisitionCost;
+	}
 
-    public void setSalePrice(BigDecimal salePrice) {
-        this.salePrice = salePrice;
-    }
+	public void setAcquisitionCost(BigDecimal acquisitionCost) {
+		this.acquisitionCost = acquisitionCost;
+	}
 
-    public BigDecimal getSalePriceWithTax() {
-        return salePriceWithTax;
-    }
+	public BigDecimal getSalePrice() {
+		return salePrice;
+	}
 
-    public void setSalePriceWithTax(BigDecimal salePriceWithTax) {
-        this.salePriceWithTax = salePriceWithTax;
-    }
+	public void setSalePrice(BigDecimal salePrice) {
+		this.salePrice = salePrice;
+	}
 
-    public BigDecimal getPriceDifference() {
-        return priceDifference;
-    }
+	public BigDecimal getSalePriceWithTax() {
+		return salePriceWithTax;
+	}
 
-    public void setPriceDifference(BigDecimal priceDifference) {
-        this.priceDifference = priceDifference;
-    }
+	public void setSalePriceWithTax(BigDecimal salePriceWithTax) {
+		this.salePriceWithTax = salePriceWithTax;
+	}
 
-    public BigDecimal getAmountPaid() {
-        return amountPaid;
-    }
+	public BigDecimal getPriceDifference() {
+		return priceDifference;
+	}
 
-    public void setAmountPaid(BigDecimal amountPaid) {
-        this.amountPaid = amountPaid;
-    }
+	public void setPriceDifference(BigDecimal priceDifference) {
+		this.priceDifference = priceDifference;
+	}
 
-    public BigDecimal getAmountLeftToPay() {
-        return amountLeftToPay;
-    }
+	public BigDecimal getAmountPaid() {
+		return amountPaid;
+	}
 
-    public void setAmountLeftToPay(BigDecimal amountLeftToPay) {
-        this.amountLeftToPay = amountLeftToPay;
-    }
+	public void setAmountPaid(BigDecimal amountPaid) {
+		this.amountPaid = amountPaid;
+	}
 
-    public BigDecimal getAmountLeftToPayWithTax() {
-        return amountLeftToPayWithTax;
-    }
+	public BigDecimal getAmountLeftToPay() {
+		return amountLeftToPay;
+	}
 
-    public void setAmountLeftToPayWithTax(BigDecimal amountLeftToPayWithTax) {
-        this.amountLeftToPayWithTax = amountLeftToPayWithTax;
-    }
+	public void setAmountLeftToPay(BigDecimal amountLeftToPay) {
+		this.amountLeftToPay = amountLeftToPay;
+	}
 
-    public LocalDateTime getCreationTime() {
-        return creationTime;
-    }
+	public BigDecimal getAmountLeftToPayWithTax() {
+		return amountLeftToPayWithTax;
+	}
 
-    public void setCreationTime(LocalDateTime creationTime) {
-        this.creationTime = creationTime;
-    }
+	public void setAmountLeftToPayWithTax(BigDecimal amountLeftToPayWithTax) {
+		this.amountLeftToPayWithTax = amountLeftToPayWithTax;
+	}
 
-    public OrderStatus getStatus() {
-        return status;
-    }
+	public LocalDateTime getCreationTime() {
+		return creationTime;
+	}
 
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
+	public void setCreationTime(LocalDateTime creationTime) {
+		this.creationTime = creationTime;
+	}
 
-    public OrderExecutionStatus getExecutionStatus() {
-        return executionStatus;
-    }
+	public OrderStatus getStatus() {
+		return status;
+	}
 
-    public void setExecutionStatus(OrderExecutionStatus executionStatus) {
-        this.executionStatus = executionStatus;
-    }
+	public void setStatus(OrderStatus status) {
+		this.status = status;
+	}
 
-    public List<OrderStatusHistory> getStatusHistory() {
-        return statusHistory;
-    }
+	public OrderExecutionStatus getExecutionStatus() {
+		return executionStatus;
+	}
 
-    public void setStatusHistory(List<OrderStatusHistory> statusHistory) {
-        this.statusHistory = statusHistory;
-    }
+	public void setExecutionStatus(OrderExecutionStatus executionStatus) {
+		this.executionStatus = executionStatus;
+	}
 
-    public List<Payment> getPayments() {
-        return payments;
-    }
+	public List<OrderStatusHistory> getStatusHistory() {
+		return statusHistory;
+	}
 
-    public void setPayments(List<Payment> payments) {
-        this.payments = payments;
-    }
+	public void setStatusHistory(List<OrderStatusHistory> statusHistory) {
+		this.statusHistory = statusHistory;
+	}
+
+	public List<Payment> getPayments() {
+		return payments;
+	}
+
+	public void setPayments(List<Payment> payments) {
+		this.payments = payments;
+	}
 }

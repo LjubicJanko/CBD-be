@@ -9,6 +9,7 @@ import cbd.order_tracker.repository.OrderRepository;
 import cbd.order_tracker.repository.OrderStatusHistoryRepository;
 import cbd.order_tracker.util.OrderMapper;
 import cbd.order_tracker.util.UserUtil;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -179,7 +180,12 @@ public class OrderService {
 	}
 
 	public void deleteOrder(Long id) {
-		orderRepository.deleteById(id);
+		OrderRecord order = orderRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + id));
+		order.setDeleted(true);
+		// Optionally, set a deletion timestamp
+		// order.setDeletedAt(LocalDateTime.now());
+		orderRepository.save(order);
 	}
 
 	public List<OrderStatusHistory> getOrderStatusHistory(Long orderId) {

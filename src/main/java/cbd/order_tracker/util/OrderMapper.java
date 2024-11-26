@@ -27,17 +27,17 @@ public class OrderMapper {
 		dto.setAcquisitionCost(orderRecord.getAcquisitionCost());
 		dto.setLegalEntity(orderRecord.isLegalEntity());
 		dto.setPlannedEndingDate(orderRecord.getPlannedEndingDate());
+		BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
+		BigDecimal priceDifference = priceForCalculation.subtract(orderRecord.getAcquisitionCost());
+		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
+		dto.setAmountLeftToPay(amountLefToPay);
 
 		if (isAdmin) {
-			BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
-			BigDecimal priceDifference = priceForCalculation.subtract(orderRecord.getAcquisitionCost());
-			BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
 
 			dto.setAmountPaid(orderRecord.getAmountPaid());
 			dto.setSalePrice(orderRecord.getSalePrice());
 			dto.setSalePriceWithTax(orderRecord.getSalePriceWithTax());
 			dto.setPriceDifference(priceDifference);
-			dto.setAmountLeftToPay(amountLefToPay);
 			dto.setPayments(orderRecord.getPayments());
 		}
 
