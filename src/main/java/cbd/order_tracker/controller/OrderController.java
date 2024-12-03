@@ -1,5 +1,6 @@
 package cbd.order_tracker.controller;
 
+import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.OrderExecutionStatus;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
@@ -59,7 +60,12 @@ public class OrderController {
 
 	@GetMapping("/track/{trackingId}")
 	public ResponseEntity<OrderTrackingDTO> trackOrder(@PathVariable String trackingId) {
-		return new ResponseEntity<OrderTrackingDTO>(orderService.getOrderByTrackingId(trackingId), HttpStatus.OK);
+		try {
+			OrderTrackingDTO trackingDTO = orderService.getOrderByTrackingId(trackingId);
+			return ResponseEntity.ok(trackingDTO); // Return 200 OK with the order tracking data
+		} catch (OrderNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Return 404 with no body
+		}
 	}
 
 	@PostMapping("/create")
@@ -102,6 +108,16 @@ public class OrderController {
 	@PostMapping("/addPayment/{id}")
 	public ResponseEntity<OrderDTO> addPayment(@PathVariable Long id, @RequestBody Payment payment) {
 		return new ResponseEntity<>(orderService.addPayment(id, payment), HttpStatus.OK);
+	}
+
+	@PutMapping("/editPayment/{id}")
+	public ResponseEntity<OrderDTO> editPayment(@PathVariable Long id, @RequestBody Payment payment) {
+		return new ResponseEntity<>(orderService.editPayment(id, payment), HttpStatus.OK);
+	}
+
+	@PutMapping("/deletePayment/{id}")
+	public ResponseEntity<OrderDTO> deletePayment(@PathVariable Long id, @RequestParam Long paymentId) {
+		return new ResponseEntity<>(orderService.deletePayment(id, paymentId), HttpStatus.OK);
 	}
 
 	@DeleteMapping("/delete/{id}")

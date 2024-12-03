@@ -19,6 +19,7 @@ public class OrderMapper {
 		dto.setId(orderRecord.getId());
 		dto.setName(orderRecord.getName());
 		dto.setDescription(orderRecord.getDescription());
+		dto.setNote(orderRecord.getNote());
 		dto.setStatus(orderRecord.getStatus());
 		dto.setExecutionStatus(orderRecord.getExecutionStatus());
 		dto.setPausingComment(orderRecord.getPausingComment());

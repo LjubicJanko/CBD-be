@@ -22,6 +22,7 @@ public class OrderRecord {
 
 	private String name;
 	private String description;
+	private String note;
 	private String plannedEndingDate;
 	private String trackingId;
 	private String pausingComment;
@@ -70,6 +71,7 @@ public class OrderRecord {
 	public OrderRecord(OrderRecord order) {
 		this.name = order.getName();
 		this.description = order.getDescription();
+		this.note = order.getNote();
 		this.plannedEndingDate = order.getPlannedEndingDate();
 		this.trackingId = UUID.randomUUID().toString();
 		this.legalEntity = order.isLegalEntity();
@@ -141,6 +143,14 @@ public class OrderRecord {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public String getNote() {
+		return note;
+	}
+
+	public void setNote(String note) {
+		this.note = note;
 	}
 
 	public String getPlannedEndingDate() {

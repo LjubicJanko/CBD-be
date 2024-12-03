@@ -13,6 +13,7 @@ public class OrderDTO {
 	private Long id;
 	private String name;
 	private String description;
+	private String note;
 	private String plannedEndingDate;
 	private String pausingComment;
 	private OrderStatus status;
@@ -57,6 +58,14 @@ public class OrderDTO {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public String getNote() {
+		return note;
+	}
+
+	public void setNote(String note) {
+		this.note = note;
 	}
 
 	public String getPlannedEndingDate() {

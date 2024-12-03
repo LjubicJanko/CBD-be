@@ -1,5 +1,6 @@
 package cbd.order_tracker.service;
 
+import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.OrderDTO;
 import cbd.order_tracker.model.dto.OrderOverviewDto;
@@ -7,6 +8,7 @@ import cbd.order_tracker.model.dto.OrderTrackingDTO;
 import cbd.order_tracker.model.dto.PageableResponse;
 import cbd.order_tracker.repository.OrderRepository;
 import cbd.order_tracker.repository.OrderStatusHistoryRepository;
+import cbd.order_tracker.repository.PaymentRepository;
 import cbd.order_tracker.util.OrderMapper;
 import cbd.order_tracker.util.UserUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,6 +30,9 @@ public class OrderService {
 
 	@Autowired
 	private OrderRepository orderRepository;
+
+	@Autowired
+	private PaymentRepository paymentRepository;
 
 	@Autowired
 	private OrderStatusHistoryRepository statusHistoryRepository;
@@ -110,11 +116,65 @@ public class OrderService {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 
+		payment.setOrder(orderRecord);
 		orderRecord.addPayment(payment);
+		orderRecord = orderRepository.save(orderRecord);
+
+		return OrderMapper.toDto(orderRecord);
+	}
+
+	public OrderDTO editPayment(Long orderId, Payment updatedPayment) {
+		OrderRecord orderRecord = orderRepository.findById(orderId)
+				.orElseThrow(() -> new RuntimeException("Order not found"));
+
+		Payment existingPayment = orderRecord.getPayments().stream()
+				.filter(payment -> payment.getId().equals(updatedPayment.getId()))
+				.findFirst()
+				.orElseThrow(() -> new RuntimeException("Payment not found"));
+
+		orderRecord.setAmountPaid(orderRecord.getAmountPaid().subtract(existingPayment.getAmount()));
+		orderRecord.setAmountLeftToPay(orderRecord.getSalePrice().subtract(orderRecord.getAmountPaid()));
+		orderRecord.setAmountLeftToPayWithTax(orderRecord.getSalePriceWithTax().subtract(orderRecord.getAmountPaid()));
+
+		existingPayment.setPayer(updatedPayment.getPayer());
+		existingPayment.setAmount(updatedPayment.getAmount());
+		existingPayment.setPaymentDate(updatedPayment.getPaymentDate());
+		existingPayment.setPaymentMethod(updatedPayment.getPaymentMethod());
+		existingPayment.setNote(updatedPayment.getNote());
+
+		orderRecord.setAmountPaid(orderRecord.getAmountPaid().add(existingPayment.getAmount()));
+		orderRecord.setAmountLeftToPay(orderRecord.getSalePrice().subtract(orderRecord.getAmountPaid()));
+		orderRecord.setAmountLeftToPayWithTax(orderRecord.getSalePriceWithTax().subtract(orderRecord.getAmountPaid()));
+
 		orderRepository.save(orderRecord);
 
 		return OrderMapper.toDto(orderRecord);
 	}
+
+
+	@Transactional
+	public OrderDTO deletePayment(Long orderId, Long paymentId) {
+		OrderRecord orderRecord = orderRepository.findById(orderId)
+				.orElseThrow(() -> new RuntimeException("Order not found"));
+
+		Payment paymentToDelete = orderRecord.getPayments().stream()
+				.filter(payment -> payment.getId().equals(paymentId))
+				.findFirst()
+				.orElseThrow(() -> new RuntimeException("Payment not found"));
+
+		orderRecord.getPayments().remove(paymentToDelete);
+
+		orderRecord.setAmountPaid(orderRecord.getAmountPaid().subtract(paymentToDelete.getAmount()));
+		orderRecord.setAmountLeftToPay(orderRecord.getSalePrice().subtract(orderRecord.getAmountPaid()));
+		orderRecord.setAmountLeftToPayWithTax(orderRecord.getSalePriceWithTax().subtract(orderRecord.getAmountPaid()));
+
+		orderRepository.save(orderRecord);
+
+		paymentRepository.delete(paymentToDelete);
+
+		return OrderMapper.toDto(orderRecord);
+	}
+
 
 	public OrderDTO getOrderById(Long id) {
 		OrderRecord orderRecord = orderRepository.findById(id)
@@ -173,7 +233,8 @@ public class OrderService {
 
 	public OrderTrackingDTO getOrderByTrackingId(String trackingId) {
 		OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+				.orElseThrow(() -> new OrderNotFoundException("Order with tracking ID '" + trackingId + "' not found"));
+
 		List<OrderStatusHistory> history = getOrderStatusHistory(orderRecord.getId());
 		orderRecord.setStatusHistory(history);
 		return OrderMapper.toOrderTrackingDTO(orderRecord);
