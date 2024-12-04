@@ -1,5 +1,6 @@
 package cbd.order_tracker.model;
 
+import cbd.order_tracker.model.dto.PaymentRequestDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLRestriction;
@@ -100,13 +101,13 @@ public class OrderRecord {
 		statusHistory.add(new OrderStatusHistory(this, newStatus, postalCode, postalService));
 	}
 
-	public void addPayment(Payment payment) {
+	public void addPayment(PaymentRequestDto payment) {
 		BigDecimal paymentAmount = payment.getAmount();
 		if (paymentAmount.compareTo(this.getAmountLeftToPay()) > 0 && paymentAmount.compareTo(this.getAmountLeftToPayWithTax()) > 0) {
 			// TODO: Handle the error
 			return;
 		}
-		Payment newPayment = new Payment(this, payment.getPayer(), paymentAmount, payment.getPaymentMethod(), payment.getNote());
+		Payment newPayment = new Payment(this, payment);
 		this.payments.add(newPayment);
 		this.amountPaid = this.amountPaid.add(newPayment.getAmount());
 		this.amountLeftToPay = this.salePrice.subtract(this.amountPaid);

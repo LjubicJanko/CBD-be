@@ -2,10 +2,7 @@ package cbd.order_tracker.service;
 
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
-import cbd.order_tracker.model.dto.OrderDTO;
-import cbd.order_tracker.model.dto.OrderOverviewDto;
-import cbd.order_tracker.model.dto.OrderTrackingDTO;
-import cbd.order_tracker.model.dto.PageableResponse;
+import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.repository.OrderRepository;
 import cbd.order_tracker.repository.OrderStatusHistoryRepository;
 import cbd.order_tracker.repository.PaymentRepository;
@@ -22,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -48,6 +46,7 @@ public class OrderService {
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 		orderRecord.setName(order.getName());
 		orderRecord.setDescription(order.getDescription());
+		orderRecord.setNote(order.getNote());
 		orderRecord.setSalePrice(order.getSalePrice());
 		orderRecord.setSalePriceWithTax(order.getSalePrice().multiply(BigDecimal.valueOf(1.2)));
 		orderRecord.setAcquisitionCost(order.getAcquisitionCost());
@@ -112,7 +111,7 @@ public class OrderService {
 		return OrderMapper.toDto(orderRecord);
 	}
 
-	public OrderDTO addPayment(Long id, Payment payment) {
+	public OrderDTO addPayment(Long id, PaymentRequestDto payment) {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 
@@ -132,19 +131,19 @@ public class OrderService {
 				.findFirst()
 				.orElseThrow(() -> new RuntimeException("Payment not found"));
 
-		orderRecord.setAmountPaid(orderRecord.getAmountPaid().subtract(existingPayment.getAmount()));
-		orderRecord.setAmountLeftToPay(orderRecord.getSalePrice().subtract(orderRecord.getAmountPaid()));
-		orderRecord.setAmountLeftToPayWithTax(orderRecord.getSalePriceWithTax().subtract(orderRecord.getAmountPaid()));
-
+		var paymentAmountDifference = existingPayment.getAmount().subtract(updatedPayment.getAmount());
+		if (paymentAmountDifference.compareTo(BigDecimal.ZERO) != 0) {
+//			deal with payment amount change
+			var newAmountPaid = orderRecord.getAmountPaid().subtract(paymentAmountDifference);
+			orderRecord.setAmountPaid(newAmountPaid);
+			orderRecord.setAmountLeftToPay(orderRecord.getSalePrice().subtract(newAmountPaid));
+			orderRecord.setAmountLeftToPayWithTax(orderRecord.getSalePriceWithTax().subtract(newAmountPaid));
+		}
 		existingPayment.setPayer(updatedPayment.getPayer());
 		existingPayment.setAmount(updatedPayment.getAmount());
 		existingPayment.setPaymentDate(updatedPayment.getPaymentDate());
 		existingPayment.setPaymentMethod(updatedPayment.getPaymentMethod());
 		existingPayment.setNote(updatedPayment.getNote());
-
-		orderRecord.setAmountPaid(orderRecord.getAmountPaid().add(existingPayment.getAmount()));
-		orderRecord.setAmountLeftToPay(orderRecord.getSalePrice().subtract(orderRecord.getAmountPaid()));
-		orderRecord.setAmountLeftToPayWithTax(orderRecord.getSalePriceWithTax().subtract(orderRecord.getAmountPaid()));
 
 		orderRepository.save(orderRecord);
 
