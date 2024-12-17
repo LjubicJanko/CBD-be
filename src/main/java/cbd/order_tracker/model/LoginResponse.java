@@ -11,6 +11,7 @@ public class LoginResponse {
 	private Set<String> roles;
 	private Set<String> privileges;
 	private String name;
+	private String username;
 
 	public String getToken() {
 		return token;
@@ -24,7 +25,7 @@ public class LoginResponse {
 	public LoginResponse() {
 	}
 
-	public LoginResponse(Integer id, String token, long expiresIn, Collection<Role> roles, String fullName) {
+	public LoginResponse(Integer id, String token, long expiresIn, Collection<Role> roles, String fullName, String username) {
 		this.id = id;
 		this.token = token;
 		this.expiresIn = expiresIn;
@@ -36,6 +37,15 @@ public class LoginResponse {
 				.map(Privilege::getName)
 				.collect(Collectors.toSet());
 		this.name = fullName;
+		this.username = username;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
 	public Integer getId() {

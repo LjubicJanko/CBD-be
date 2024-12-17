@@ -1,6 +1,7 @@
 package cbd.order_tracker.controller;
 
 import cbd.order_tracker.model.User;
+import cbd.order_tracker.model.dto.UserDto;
 import cbd.order_tracker.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,25 +16,19 @@ import java.util.List;
 @RestController
 public class UserController {
 
-    private final UserService userService;
+	private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+	public UserController(UserService userService) {
+		this.userService = userService;
+	}
 
-    @GetMapping("/me")
-    public ResponseEntity<User> authenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	@GetMapping("/me")
+	public ResponseEntity<User> authenticatedUser() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        User currentUser = (User) authentication.getPrincipal();
+		User currentUser = (User) authentication.getPrincipal();
 
-        return ResponseEntity.ok(currentUser);
-    }
+		return ResponseEntity.ok(currentUser);
+	}
 
-    @GetMapping("/")
-    public ResponseEntity<List<User>> allUsers() {
-        List <User> users = userService.allUsers();
-
-        return ResponseEntity.ok(users);
-    }
 }
