@@ -33,8 +33,8 @@ public class OrderTrackingDTO {
 		this.lastUpdatedDate = lastItem.getCreationTime().toString();
 		this.status = orderRecord.getStatus();
 		this.isLegalEntity = orderRecord.isLegalEntity();
-		this.amountLeftToPay = orderRecord.getAmountLeftToPay();
-		this.amountLeftToPayWithTax = orderRecord.getAmountLeftToPayWithTax();
+		this.amountLeftToPay = orderRecord.getSalePrice().subtract(orderRecord.getAmountPaid());
+		this.amountLeftToPayWithTax = orderRecord.getSalePriceWithTax().subtract(orderRecord.getAmountPaid());
 		if (orderRecord.getStatus() == OrderStatus.SHIPPED) {
 			var history = orderRecord.getStatusHistory();
 			var lastStatusHistoryChange = history.get(history.size() - 1);
