@@ -31,7 +31,7 @@ public class Payment {
 	private LocalDate paymentDate; // Payment date, defaults to today
 
 	@Enumerated(EnumType.STRING)
-	private PaymentMethod paymentMethod; // Payment method options: Account, Cash, Invoice
+	private PaymentMethod paymentMethod; // Payment method options: Account, Cash, Invoice, CASH_ON_DELIVERY
 
 	private String note; // Optional field for additional notes
 
@@ -43,8 +43,7 @@ public class Payment {
 		this.payer = payment.getPayer();
 		this.amount = payment.getAmount();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-		LocalDate localDate = LocalDate.parse(payment.getPaymentDate(), formatter);
-		this.paymentDate = localDate;
+		this.paymentDate = LocalDate.parse(payment.getPaymentDate(), formatter);
 		this.paymentMethod = payment.getPaymentMethod();
 		this.note = payment.getNote();
 	}

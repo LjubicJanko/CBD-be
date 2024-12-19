@@ -17,7 +17,7 @@ public class PaymentRequestDto {
 	private String payer; // For individual: name and surname, for legal entity: company name
 	private BigDecimal amount; // Amount in RSD
 	private String paymentDate; // Payment date, defaults to today
-	private PaymentMethod paymentMethod; // Payment method options: Account, Cash, Invoice
+	private PaymentMethod paymentMethod; // Payment method options: Account, Cash, Invoice, CASH_ON_DELIVERY
 	private String note;
 
 	public PaymentRequestDto() {
