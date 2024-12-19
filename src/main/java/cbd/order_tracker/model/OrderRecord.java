@@ -103,10 +103,10 @@ public class OrderRecord {
 
 	public void addPayment(PaymentRequestDto payment) {
 		BigDecimal paymentAmount = payment.getAmount();
-		if (paymentAmount.compareTo(this.getAmountLeftToPay()) > 0 && paymentAmount.compareTo(this.getAmountLeftToPayWithTax()) > 0) {
-			// TODO: Handle the error
-			return;
-		}
+//		if (paymentAmount.compareTo(this.getAmountLeftToPay()) > 0 && paymentAmount.compareTo(this.getAmountLeftToPayWithTax()) > 0) {
+//			// TODO: Handle the error
+//			return;
+//		}
 		Payment newPayment = new Payment(this, payment);
 		this.payments.add(newPayment);
 		this.amountPaid = this.amountPaid.add(newPayment.getAmount());
