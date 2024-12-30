@@ -183,12 +183,14 @@ public class OrderService {
 
 	public PageableResponse<OrderOverviewDto> getAllPageable(
 			List<OrderStatus> statuses,
+			String sortCriteria,
 			String sort,
 			List<OrderExecutionStatus> executionStatuses,
 			Integer page,
 			Integer perPage) {
 		var direction = sort.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-		Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(direction, "creationTime"));
+		var sortProp = sortCriteria.equals("creation-date") ? "creationTime" : "plannedEndingDate";
+		Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(direction, sortProp));
 
 		Page<OrderRecord> orderRecords;
 

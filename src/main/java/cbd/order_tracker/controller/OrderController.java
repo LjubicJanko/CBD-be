@@ -38,6 +38,7 @@ public class OrderController {
 	@GetMapping("/getPageable")
 	public ResponseEntity<PageableResponse<OrderOverviewDto>> getAllPageable(
 			@RequestParam(required = false) List<OrderStatus> statuses,
+			@RequestParam(required = false) String sortCriteria,
 			@RequestParam(required = false) String sort,
 			@RequestParam(required = true) Integer page,
 			@RequestParam(required = true) Integer perPage,
@@ -48,7 +49,7 @@ public class OrderController {
 			executionStatuses = List.of(OrderExecutionStatus.ACTIVE, OrderExecutionStatus.PAUSED);
 		}
 
-		PageableResponse<OrderOverviewDto> response = orderService.getAllPageable(statuses, sort, executionStatuses, page, perPage);
+		PageableResponse<OrderOverviewDto> response = orderService.getAllPageable(statuses, sortCriteria, sort, executionStatuses, page, perPage);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
