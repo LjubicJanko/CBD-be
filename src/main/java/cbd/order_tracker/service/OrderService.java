@@ -181,37 +181,37 @@ public class OrderService {
 		return OrderMapper.toDto(orderRecord);
 	}
 
-	public PageableResponse<OrderOverviewDto> getAllPageable(
+	public PageableResponse<OrderOverviewDto> fetchPageable(
+			String searchTerm,
 			List<OrderStatus> statuses,
 			String sortCriteria,
 			String sort,
 			List<OrderExecutionStatus> executionStatuses,
 			Integer page,
 			Integer perPage) {
-		var direction = sort.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-		var sortProp = sortCriteria.equals("creation-date") ? "creationTime" : "plannedEndingDate";
+
+		// Set default executionStatuses if not provided
+		if (executionStatuses == null || executionStatuses.isEmpty()) {
+			executionStatuses = List.of(OrderExecutionStatus.ACTIVE, OrderExecutionStatus.PAUSED);
+		}
+
+		// Determine sorting direction and property
+		var direction = "asc".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
+		var sortProp = "creation-date".equals(sortCriteria) ? "creationTime" : "plannedEndingDate";
 		Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(direction, sortProp));
 
-		Page<OrderRecord> orderRecords;
+		// Fetch records with unified query
+		Page<OrderRecord> orderRecords = orderRepository.findBySearchAndFilters(
+				searchTerm, statuses, executionStatuses, pageRequest);
 
-		if ((executionStatuses.isEmpty() && statuses.isEmpty())) {
-			orderRecords = orderRepository.findAll(pageRequest);
-		} else {
-			if (executionStatuses == null || executionStatuses.isEmpty()) {
-				orderRecords = orderRepository.findAllByStatusIn(statuses, pageRequest);
-			} else if (statuses == null || statuses.isEmpty()) {
-				orderRecords = orderRepository.findAllByExecutionStatusIn(executionStatuses, pageRequest);
-			} else {
-				orderRecords = orderRepository.findAllByStatusInAndExecutionStatusIn(statuses, executionStatuses, pageRequest);
-			}
-		}
+		// Map results to DTOs
 		var orderOverviewDtos = orderRecords.stream()
 				.map(OrderMapper::toOverviewDto)
 				.collect(Collectors.toList());
 
-		return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(),
+		return new PageableResponse<>(
+				page, perPage, orderRecords.getTotalPages(),
 				orderRecords.getTotalElements(), orderOverviewDtos);
-
 	}
 
 	public List<OrderDTO> getAll(List<OrderStatus> statuses) {

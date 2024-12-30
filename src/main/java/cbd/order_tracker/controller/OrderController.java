@@ -34,9 +34,9 @@ public class OrderController {
 		return new ResponseEntity<>(orderService.getAll(statuses), HttpStatus.OK);
 	}
 
-
-	@GetMapping("/getPageable")
-	public ResponseEntity<PageableResponse<OrderOverviewDto>> getAllPageable(
+	@GetMapping("/fetchPageable")
+	public ResponseEntity<PageableResponse<OrderOverviewDto>> fetchPageable(
+			@RequestParam(required = false) String searchTerm,
 			@RequestParam(required = false) List<OrderStatus> statuses,
 			@RequestParam(required = false) String sortCriteria,
 			@RequestParam(required = false) String sort,
@@ -44,12 +44,14 @@ public class OrderController {
 			@RequestParam(required = true) Integer perPage,
 			@RequestParam(required = false) List<OrderExecutionStatus> executionStatuses) {
 
-		// Use default filter if no executionStatuses are provided
+		// Apply default filter for executionStatuses if not provided
 		if (executionStatuses == null || executionStatuses.isEmpty()) {
 			executionStatuses = List.of(OrderExecutionStatus.ACTIVE, OrderExecutionStatus.PAUSED);
 		}
 
-		PageableResponse<OrderOverviewDto> response = orderService.getAllPageable(statuses, sortCriteria, sort, executionStatuses, page, perPage);
+		// Delegate to the service layer with all parameters
+		PageableResponse<OrderOverviewDto> response = orderService.fetchPageable(searchTerm, statuses, sortCriteria, sort, executionStatuses, page, perPage);
+
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

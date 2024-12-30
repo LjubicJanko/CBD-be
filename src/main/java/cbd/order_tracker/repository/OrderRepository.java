@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,15 +24,14 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 	@Query("SELECT o FROM OrderRecord o WHERE (o.name LIKE %:nameTerm% OR o.description LIKE %:descriptionTerm%) AND o.deleted = false")
 	Page<OrderRecord> findByNameContainingOrDescriptionContaining(String nameTerm, String descriptionTerm, Pageable pageable);
 
-	@Query("SELECT o FROM OrderRecord o WHERE o.status IN :statuses AND o.deleted = false")
-	Page<OrderRecord> findAllByStatusIn(List<OrderStatus> statuses, Pageable pageable);
-
-	@Query("SELECT o FROM OrderRecord o WHERE o.executionStatus IN :executionStatuses AND o.deleted = false")
-	Page<OrderRecord> findAllByExecutionStatusIn(List<OrderExecutionStatus> executionStatuses, Pageable pageable);
-
-	@Query("SELECT o FROM OrderRecord o WHERE o.status IN :statuses AND o.executionStatus IN :executionStatuses AND o.deleted = false")
-	Page<OrderRecord> findAllByStatusInAndExecutionStatusIn(
-			List<OrderStatus> statuses,
-			List<OrderExecutionStatus> executionStatuses,
+	@Query("SELECT o FROM OrderRecord o WHERE " +
+			"(:searchTerm IS NULL OR o.name LIKE %:searchTerm% OR o.description LIKE %:searchTerm%) AND " +
+			"(:statuses IS NULL OR o.status IN :statuses) AND " +
+			"(:executionStatuses IS NULL OR o.executionStatus IN :executionStatuses) AND " +
+			"o.deleted = false")
+	Page<OrderRecord> findBySearchAndFilters(
+			@Param("searchTerm") String searchTerm,
+			@Param("statuses") List<OrderStatus> statuses,
+			@Param("executionStatuses") List<OrderExecutionStatus> executionStatuses,
 			Pageable pageable);
 }
