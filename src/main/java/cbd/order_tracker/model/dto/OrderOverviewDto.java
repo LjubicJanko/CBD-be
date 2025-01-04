@@ -3,74 +3,94 @@ package cbd.order_tracker.model.dto;
 import cbd.order_tracker.model.OrderExecutionStatus;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
+import cbd.order_tracker.model.OrderStatusHistory;
 
 public class OrderOverviewDto {
 
-    private Long id;
-    private String name;
-    private String description;
-    private String plannedEndingDate;
-    private OrderStatus status;
-    private OrderExecutionStatus executionStatus;
+	private Long id;
+	private String name;
+	private String description;
+	private String plannedEndingDate;
+	private String dateWhenMovedToDone;
+	private OrderStatus status;
+	private OrderExecutionStatus executionStatus;
 
-    public OrderOverviewDto() {
-    }
+	public OrderOverviewDto() {
+	}
 
-    public OrderOverviewDto(OrderRecord orderRecord) {
-        this.id = orderRecord.getId();
-        this.name = orderRecord.getName();
-        this.description = orderRecord.getDescription();
-        this.plannedEndingDate = orderRecord.getPlannedEndingDate();
-        this.status = orderRecord.getStatus();
-        this.executionStatus = orderRecord.getExecutionStatus();
-    }
+	public OrderOverviewDto(OrderRecord orderRecord) {
+		this.id = orderRecord.getId();
+		this.name = orderRecord.getName();
+		this.description = orderRecord.getDescription();
+		this.plannedEndingDate = orderRecord.getPlannedEndingDate();
+		String dateWhenMovedToDone = "";
+		var historyRecords = orderRecord.getStatusHistory();
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+		for (OrderStatusHistory historyRecord : historyRecords) {
+			if (historyRecord.getStatus().equals(OrderStatus.DONE)) {
+				dateWhenMovedToDone = historyRecord.getCreationTime().toString();
+			}
+		}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+		this.dateWhenMovedToDone = dateWhenMovedToDone;
+		this.status = orderRecord.getStatus();
+		this.executionStatus = orderRecord.getExecutionStatus();
+	}
 
-    public String getName() {
-        return name;
-    }
+	// Getters and Setters
+	public Long getId() {
+		return id;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getPlannedEndingDate() {
-        return plannedEndingDate;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public void setPlannedEndingDate(String plannedEndingDate) {
-        this.plannedEndingDate = plannedEndingDate;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public OrderStatus getStatus() {
-        return status;
-    }
+	public String getPlannedEndingDate() {
+		return plannedEndingDate;
+	}
 
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
+	public void setPlannedEndingDate(String plannedEndingDate) {
+		this.plannedEndingDate = plannedEndingDate;
+	}
 
-    public OrderExecutionStatus getExecutionStatus() {
-        return executionStatus;
-    }
+	public OrderStatus getStatus() {
+		return status;
+	}
 
-    public void setExecutionStatus(OrderExecutionStatus executionStatus) {
-        this.executionStatus = executionStatus;
-    }
+	public void setStatus(OrderStatus status) {
+		this.status = status;
+	}
+
+	public OrderExecutionStatus getExecutionStatus() {
+		return executionStatus;
+	}
+
+	public void setExecutionStatus(OrderExecutionStatus executionStatus) {
+		this.executionStatus = executionStatus;
+	}
+
+	public String getDateWhenMovedToDone() {
+		return dateWhenMovedToDone;
+	}
+
+	public void setDateWhenMovedToDone(String dateWhenMovedToDone) {
+		this.dateWhenMovedToDone = dateWhenMovedToDone;
+	}
 }
