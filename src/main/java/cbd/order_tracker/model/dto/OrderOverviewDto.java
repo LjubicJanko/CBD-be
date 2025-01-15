@@ -5,12 +5,14 @@ import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
 import cbd.order_tracker.model.OrderStatusHistory;
 
+import java.time.LocalDate;
+
 public class OrderOverviewDto {
 
 	private Long id;
 	private String name;
 	private String description;
-	private String plannedEndingDate;
+	private LocalDate plannedEndingDate;
 	private String dateWhenMovedToDone;
 	private OrderStatus status;
 	private OrderExecutionStatus executionStatus;
@@ -62,11 +64,11 @@ public class OrderOverviewDto {
 		this.description = description;
 	}
 
-	public String getPlannedEndingDate() {
+	public LocalDate getPlannedEndingDate() {
 		return plannedEndingDate;
 	}
 
-	public void setPlannedEndingDate(String plannedEndingDate) {
+	public void setPlannedEndingDate(LocalDate plannedEndingDate) {
 		this.plannedEndingDate = plannedEndingDate;
 	}
 

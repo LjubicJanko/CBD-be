@@ -1,12 +1,11 @@
 package cbd.order_tracker.model;
 
 import cbd.order_tracker.model.dto.PaymentRequestDto;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +23,8 @@ public class OrderRecord {
 	private String name;
 	private String description;
 	private String note;
-	private String plannedEndingDate;
+	@Column(name = "planned_ending_date", columnDefinition = "DATE")
+	private LocalDate plannedEndingDate;
 	private String trackingId;
 	private String pausingComment;
 	private LocalDateTime creationTime;
@@ -149,11 +149,11 @@ public class OrderRecord {
 		this.note = note;
 	}
 
-	public String getPlannedEndingDate() {
+	public LocalDate getPlannedEndingDate() {
 		return plannedEndingDate;
 	}
 
-	public void setPlannedEndingDate(String plannedEndingDate) {
+	public void setPlannedEndingDate(LocalDate plannedEndingDate) {
 		this.plannedEndingDate = plannedEndingDate;
 	}
 

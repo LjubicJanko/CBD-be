@@ -5,14 +5,14 @@ import cbd.order_tracker.model.OrderStatus;
 import cbd.order_tracker.model.OrderStatusHistory;
 
 import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 import java.util.List;
 
 public class OrderTrackingDTO {
 
 	private String name;
 	private String description;
-	private String plannedEndingDate;
+	private LocalDate plannedEndingDate;
 	private String lastUpdatedDate;
 	private OrderStatus status;
 	private boolean isLegalEntity;
@@ -59,11 +59,11 @@ public class OrderTrackingDTO {
 		this.description = description;
 	}
 
-	public String getPlannedEndingDate() {
+	public LocalDate getPlannedEndingDate() {
 		return plannedEndingDate;
 	}
 
-	public void setPlannedEndingDate(String plannedEndingDate) {
+	public void setPlannedEndingDate(LocalDate plannedEndingDate) {
 		this.plannedEndingDate = plannedEndingDate;
 	}
 

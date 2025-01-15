@@ -6,6 +6,7 @@ import cbd.order_tracker.model.OrderStatusHistory;
 import cbd.order_tracker.model.Payment;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public class OrderDTO {
@@ -14,7 +15,7 @@ public class OrderDTO {
 	private String name;
 	private String description;
 	private String note;
-	private String plannedEndingDate;
+	private LocalDate plannedEndingDate;
 	private String pausingComment;
 	private OrderStatus status;
 	private OrderExecutionStatus executionStatus;
@@ -68,11 +69,11 @@ public class OrderDTO {
 		this.note = note;
 	}
 
-	public String getPlannedEndingDate() {
+	public LocalDate getPlannedEndingDate() {
 		return plannedEndingDate;
 	}
 
-	public void setPlannedEndingDate(String plannedEndingDate) {
+	public void setPlannedEndingDate(LocalDate plannedEndingDate) {
 		this.plannedEndingDate = plannedEndingDate;
 	}
 
