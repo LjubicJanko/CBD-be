@@ -5,7 +5,9 @@ import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
 import cbd.order_tracker.model.OrderStatusHistory;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 
 public class OrderOverviewDto {
 
@@ -16,6 +18,9 @@ public class OrderOverviewDto {
 	private String dateWhenMovedToDone;
 	private OrderStatus status;
 	private OrderExecutionStatus executionStatus;
+	private BigDecimal amountLeftToPay;
+	private String postalCode;
+	private String postalService;
 
 	public OrderOverviewDto() {
 	}
@@ -25,18 +30,23 @@ public class OrderOverviewDto {
 		this.name = orderRecord.getName();
 		this.description = orderRecord.getDescription();
 		this.plannedEndingDate = orderRecord.getPlannedEndingDate();
-		String dateWhenMovedToDone = "";
 		var historyRecords = orderRecord.getStatusHistory();
 
 		for (OrderStatusHistory historyRecord : historyRecords) {
 			if (historyRecord.getStatus().equals(OrderStatus.DONE)) {
-				dateWhenMovedToDone = historyRecord.getCreationTime().toString();
+				this.dateWhenMovedToDone = historyRecord.getCreationTime().toString();
+			} else if (historyRecord.getStatus().equals(OrderStatus.SHIPPED)) {
+				this.postalCode = historyRecord.getPostalCode();
+				this.postalService = historyRecord.getPostalService();
 			}
 		}
 
-		this.dateWhenMovedToDone = dateWhenMovedToDone;
 		this.status = orderRecord.getStatus();
 		this.executionStatus = orderRecord.getExecutionStatus();
+
+		BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
+		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
+		this.setAmountLeftToPay(amountLefToPay);
 	}
 
 	// Getters and Setters
@@ -94,5 +104,29 @@ public class OrderOverviewDto {
 
 	public void setDateWhenMovedToDone(String dateWhenMovedToDone) {
 		this.dateWhenMovedToDone = dateWhenMovedToDone;
+	}
+
+	public BigDecimal getAmountLeftToPay() {
+		return amountLeftToPay;
+	}
+
+	public void setAmountLeftToPay(BigDecimal amountLeftToPay) {
+		this.amountLeftToPay = amountLeftToPay;
+	}
+
+	public String getPostalCode() {
+		return postalCode;
+	}
+
+	public void setPostalCode(String postalCode) {
+		this.postalCode = postalCode;
+	}
+
+	public String getPostalService() {
+		return postalService;
+	}
+
+	public void setPostalService(String postalService) {
+		this.postalService = postalService;
 	}
 }
