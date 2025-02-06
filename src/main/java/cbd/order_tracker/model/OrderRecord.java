@@ -57,6 +57,10 @@ public class OrderRecord {
 	@Enumerated(EnumType.STRING)
 	private OrderStatus status;
 
+	@Column(length = 32, columnDefinition = "varchar(32) default 'MEDIUM'")
+	@Enumerated(EnumType.STRING)
+	private OrderPriority priority;
+
 	@Enumerated(EnumType.STRING)
 	private OrderExecutionStatus executionStatus;
 
@@ -85,6 +89,7 @@ public class OrderRecord {
 		this.amountLeftToPayWithTax = salePriceWithTax;
 		this.creationTime = LocalDateTime.now();
 		this.status = OrderStatus.DESIGN;
+		this.priority = order.getPriority();
 		this.executionStatus = OrderExecutionStatus.ACTIVE;
 		this.statusHistory = new ArrayList<>();
 		this.payments = new ArrayList<>();
@@ -275,5 +280,13 @@ public class OrderRecord {
 
 	public void setPayments(List<Payment> payments) {
 		this.payments = payments;
+	}
+
+	public OrderPriority getPriority() {
+		return priority;
+	}
+
+	public void setPriority(OrderPriority priority) {
+		this.priority = priority;
 	}
 }

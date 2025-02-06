@@ -50,6 +50,7 @@ public class OrderService {
 		orderRecord.setSalePrice(order.getSalePrice());
 		orderRecord.setSalePriceWithTax(order.getSalePrice().multiply(BigDecimal.valueOf(1.2)));
 		orderRecord.setAcquisitionCost(order.getAcquisitionCost());
+		orderRecord.setPriority(order.getPriority());
 
 		orderRecord.setPlannedEndingDate(order.getPlannedEndingDate());
 

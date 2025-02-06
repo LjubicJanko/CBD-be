@@ -21,6 +21,7 @@ public class OrderMapper {
 		dto.setDescription(orderRecord.getDescription());
 		dto.setNote(orderRecord.getNote());
 		dto.setStatus(orderRecord.getStatus());
+		dto.setPriority(orderRecord.getPriority());
 		dto.setExecutionStatus(orderRecord.getExecutionStatus());
 		dto.setPausingComment(orderRecord.getPausingComment());
 		dto.setTrackingId(orderRecord.getTrackingId());
@@ -29,7 +30,7 @@ public class OrderMapper {
 		dto.setLegalEntity(orderRecord.isLegalEntity());
 		dto.setPlannedEndingDate(orderRecord.getPlannedEndingDate());
 		BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
-		BigDecimal priceDifference = priceForCalculation.subtract(orderRecord.getAcquisitionCost());
+		BigDecimal priceDifference = orderRecord.getSalePrice().subtract(orderRecord.getAcquisitionCost());
 		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
 		dto.setAmountLeftToPay(amountLefToPay);
 

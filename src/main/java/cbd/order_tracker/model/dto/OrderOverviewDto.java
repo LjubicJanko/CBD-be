@@ -1,13 +1,9 @@
 package cbd.order_tracker.model.dto;
 
-import cbd.order_tracker.model.OrderExecutionStatus;
-import cbd.order_tracker.model.OrderRecord;
-import cbd.order_tracker.model.OrderStatus;
-import cbd.order_tracker.model.OrderStatusHistory;
+import cbd.order_tracker.model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
 
 public class OrderOverviewDto {
 
@@ -17,6 +13,7 @@ public class OrderOverviewDto {
 	private LocalDate plannedEndingDate;
 	private String dateWhenMovedToDone;
 	private OrderStatus status;
+	private OrderPriority priority;
 	private OrderExecutionStatus executionStatus;
 	private BigDecimal amountLeftToPay;
 	private String postalCode;
@@ -42,6 +39,7 @@ public class OrderOverviewDto {
 		}
 
 		this.status = orderRecord.getStatus();
+		this.priority = orderRecord.getPriority();
 		this.executionStatus = orderRecord.getExecutionStatus();
 
 		BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
@@ -88,6 +86,14 @@ public class OrderOverviewDto {
 
 	public void setStatus(OrderStatus status) {
 		this.status = status;
+	}
+
+	public OrderPriority getPriority() {
+		return priority;
+	}
+
+	public void setPriority(OrderPriority priority) {
+		this.priority = priority;
 	}
 
 	public OrderExecutionStatus getExecutionStatus() {

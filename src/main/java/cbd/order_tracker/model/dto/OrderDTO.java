@@ -1,9 +1,6 @@
 package cbd.order_tracker.model.dto;
 
-import cbd.order_tracker.model.OrderExecutionStatus;
-import cbd.order_tracker.model.OrderStatus;
-import cbd.order_tracker.model.OrderStatusHistory;
-import cbd.order_tracker.model.Payment;
+import cbd.order_tracker.model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,6 +15,7 @@ public class OrderDTO {
 	private LocalDate plannedEndingDate;
 	private String pausingComment;
 	private OrderStatus status;
+	private OrderPriority priority;
 	private OrderExecutionStatus executionStatus;
 	private String trackingId;
 	private List<OrderStatusHistory> statusHistory;
@@ -179,5 +177,13 @@ public class OrderDTO {
 
 	public void setExecutionStatus(OrderExecutionStatus executionStatus) {
 		this.executionStatus = executionStatus;
+	}
+
+	public OrderPriority getPriority() {
+		return priority;
+	}
+
+	public void setPriority(OrderPriority priority) {
+		this.priority = priority;
 	}
 }
