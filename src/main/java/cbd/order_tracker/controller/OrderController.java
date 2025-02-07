@@ -1,10 +1,7 @@
 package cbd.order_tracker.controller;
 
 import cbd.order_tracker.exceptions.OrderNotFoundException;
-import cbd.order_tracker.model.OrderExecutionStatus;
-import cbd.order_tracker.model.OrderRecord;
-import cbd.order_tracker.model.OrderStatus;
-import cbd.order_tracker.model.Payment;
+import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.service.OrderService;
 import org.springframework.http.HttpStatus;
@@ -38,6 +35,7 @@ public class OrderController {
 	public ResponseEntity<PageableResponse<OrderOverviewDto>> fetchPageable(
 			@RequestParam(required = false) String searchTerm,
 			@RequestParam(required = false) List<OrderStatus> statuses,
+			@RequestParam(required = false) List<OrderPriority> priorities,
 			@RequestParam(required = false) String sortCriteria,
 			@RequestParam(required = false) String sort,
 			@RequestParam(required = true) Integer page,
@@ -50,7 +48,7 @@ public class OrderController {
 		}
 
 		// Delegate to the service layer with all parameters
-		PageableResponse<OrderOverviewDto> response = orderService.fetchPageable(searchTerm, statuses, sortCriteria, sort, executionStatuses, page, perPage);
+		PageableResponse<OrderOverviewDto> response = orderService.fetchPageable(searchTerm, statuses, priorities, sortCriteria, sort, executionStatuses, page, perPage);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

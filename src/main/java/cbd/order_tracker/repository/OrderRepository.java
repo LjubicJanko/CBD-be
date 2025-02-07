@@ -1,6 +1,7 @@
 package cbd.order_tracker.repository;
 
 import cbd.order_tracker.model.OrderExecutionStatus;
+import cbd.order_tracker.model.OrderPriority;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
 import org.springframework.data.domain.Page;
@@ -27,11 +28,13 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 	@Query("SELECT o FROM OrderRecord o WHERE " +
 			"(:searchTerm IS NULL OR o.name LIKE %:searchTerm% OR o.description LIKE %:searchTerm%) AND " +
 			"(:statuses IS NULL OR o.status IN :statuses) AND " +
+			"(:priorities IS NULL OR o.priority IN :priorities) AND " +
 			"(:executionStatuses IS NULL OR o.executionStatus IN :executionStatuses) AND " +
 			"o.deleted = false")
 	Page<OrderRecord> findBySearchAndFilters(
 			@Param("searchTerm") String searchTerm,
 			@Param("statuses") List<OrderStatus> statuses,
+			@Param("priorities") List<OrderPriority> priorities,
 			@Param("executionStatuses") List<OrderExecutionStatus> executionStatuses,
 			Pageable pageable);
 }

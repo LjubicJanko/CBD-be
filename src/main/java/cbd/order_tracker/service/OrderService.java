@@ -185,6 +185,7 @@ public class OrderService {
 	public PageableResponse<OrderOverviewDto> fetchPageable(
 			String searchTerm,
 			List<OrderStatus> statuses,
+			List<OrderPriority> priorities,
 			String sortCriteria,
 			String sort,
 			List<OrderExecutionStatus> executionStatuses,
@@ -203,7 +204,7 @@ public class OrderService {
 
 		// Fetch records with unified query
 		Page<OrderRecord> orderRecords = orderRepository.findBySearchAndFilters(
-				searchTerm, statuses, executionStatuses, pageRequest);
+				searchTerm, statuses, priorities, executionStatuses, pageRequest);
 
 		// Map results to DTOs
 		var orderOverviewDtos = orderRecords.stream()
