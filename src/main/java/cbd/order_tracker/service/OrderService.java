@@ -195,6 +195,7 @@ public class OrderService {
 		return OrderMapper.toDto(orderRecord, history);
 	}
 
+	@Transactional(readOnly = true)
 	public PageableResponse<OrderOverviewDto> fetchPageable(
 			String searchTerm,
 			List<OrderStatus> statuses,
@@ -218,11 +219,6 @@ public class OrderService {
 		// Fetch records with unified query
 		Page<OrderOverviewDto> orderDtos = orderRepository.findOverviewBySearchAndFilters(
 				searchTerm, statuses, priorities, executionStatuses, pageRequest);
-
-		// Map results to DTOs
-//		var orderOverviewDtos = orderRecords.stream()
-//				.map(OrderMapper::toOverviewDto)
-//				.collect(Collectors.toList());
 
 		return new PageableResponse<>(
 				page, perPage, orderDtos.getTotalPages(),
