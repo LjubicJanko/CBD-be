@@ -1,17 +1,20 @@
 package cbd.order_tracker.util;
 
 import cbd.order_tracker.model.OrderRecord;
+import cbd.order_tracker.model.OrderStatusHistory;
 import cbd.order_tracker.model.Role;
 import cbd.order_tracker.model.dto.OrderDTO;
 import cbd.order_tracker.model.dto.OrderOverviewDto;
 import cbd.order_tracker.model.dto.OrderTrackingDTO;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class OrderMapper {
 
-	public static OrderDTO toDto(OrderRecord orderRecord) {
+	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history) {
 		OrderDTO dto = new OrderDTO();
 		Collection<Role> roles = UserUtil.getCurrentUserRoles();
 		Boolean isAdmin = roles.stream().anyMatch(role -> "admin".equals(role.getName()));
@@ -25,7 +28,7 @@ public class OrderMapper {
 		dto.setExecutionStatus(orderRecord.getExecutionStatus());
 		dto.setPausingComment(orderRecord.getPausingComment());
 		dto.setTrackingId(orderRecord.getTrackingId());
-		dto.setStatusHistory(orderRecord.getStatusHistory());
+		dto.setStatusHistory(history);
 		dto.setAcquisitionCost(orderRecord.getAcquisitionCost());
 		dto.setLegalEntity(orderRecord.isLegalEntity());
 		dto.setPlannedEndingDate(orderRecord.getPlannedEndingDate());
@@ -40,7 +43,7 @@ public class OrderMapper {
 			dto.setSalePrice(orderRecord.getSalePrice());
 			dto.setSalePriceWithTax(orderRecord.getSalePriceWithTax());
 			dto.setPriceDifference(priceDifference);
-			dto.setPayments(orderRecord.getPayments());
+//			dto.setPayments(orderRecord.getPayments());
 		}
 
 		return dto;

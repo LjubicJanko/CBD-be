@@ -53,6 +53,10 @@ public class OrderController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@GetMapping("/payments/{id}")
+	public List<Payment> getPayments(@PathVariable Long id) {
+		return orderService.getPayments(id);
+	}
 
 	@GetMapping("/search")
 	public ResponseEntity<PageableResponse<OrderOverviewDto>> search(@RequestParam(required = false) String searchTerm, @RequestParam(required = true) Integer page, @RequestParam(required = true) Integer perPage) {

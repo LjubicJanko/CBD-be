@@ -54,6 +54,10 @@ public class OrderRecord {
 	@Column(precision = 19, scale = 4)
 	private BigDecimal amountLeftToPayWithTax;
 
+	private LocalDateTime dateWhenMovedToDone;
+	private String postalCode;
+	private String postalService;
+
 	@Enumerated(EnumType.STRING)
 	private OrderStatus status;
 
@@ -64,10 +68,10 @@ public class OrderRecord {
 	@Enumerated(EnumType.STRING)
 	private OrderExecutionStatus executionStatus;
 
-	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<OrderStatusHistory> statusHistory;
 
-	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Payment> payments;
 
 	public OrderRecord() {
@@ -93,12 +97,21 @@ public class OrderRecord {
 		this.executionStatus = OrderExecutionStatus.ACTIVE;
 		this.statusHistory = new ArrayList<>();
 		this.payments = new ArrayList<>();
+		this.dateWhenMovedToDone = null;
+		this.postalCode = null;
+		this.postalService = null;
 		addStatusHistory(status, null, null);
 	}
 
 
 	public void nextStatus(String postalCode, String postalService) {
 		this.status = this.status.next();
+		if(status.equals(OrderStatus.SHIPPED)) {
+			this.postalService = postalService;
+			this.postalCode = postalCode;
+		} else if(status.equals(OrderStatus.DONE)) {
+			this.dateWhenMovedToDone = LocalDateTime.now();
+		}
 		addStatusHistory(status, postalCode, postalService);
 	}
 
@@ -113,6 +126,7 @@ public class OrderRecord {
 		this.amountLeftToPay = this.salePrice.subtract(this.amountPaid);
 		this.amountLeftToPayWithTax = this.salePriceWithTax.subtract(this.amountPaid);
 	}
+
 
 	public Long getId() {
 		return id;
@@ -288,5 +302,30 @@ public class OrderRecord {
 
 	public void setPriority(OrderPriority priority) {
 		this.priority = priority;
+	}
+
+
+	public LocalDateTime getDateWhenMovedToDone() {
+		return dateWhenMovedToDone;
+	}
+
+	public void setDateWhenMovedToDone(LocalDateTime dateWhenMovedToDone) {
+		this.dateWhenMovedToDone = dateWhenMovedToDone;
+	}
+
+	public String getPostalCode() {
+		return postalCode;
+	}
+
+	public void setPostalCode(String postalCode) {
+		this.postalCode = postalCode;
+	}
+
+	public String getPostalService() {
+		return postalService;
+	}
+
+	public void setPostalService(String postalService) {
+		this.postalService = postalService;
 	}
 }

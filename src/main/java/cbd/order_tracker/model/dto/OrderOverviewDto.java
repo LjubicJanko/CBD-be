@@ -27,16 +27,6 @@ public class OrderOverviewDto {
 		this.name = orderRecord.getName();
 		this.description = orderRecord.getDescription();
 		this.plannedEndingDate = orderRecord.getPlannedEndingDate();
-		var historyRecords = orderRecord.getStatusHistory();
-
-		for (OrderStatusHistory historyRecord : historyRecords) {
-			if (historyRecord.getStatus().equals(OrderStatus.DONE)) {
-				this.dateWhenMovedToDone = historyRecord.getCreationTime().toString();
-			} else if (historyRecord.getStatus().equals(OrderStatus.SHIPPED)) {
-				this.postalCode = historyRecord.getPostalCode();
-				this.postalService = historyRecord.getPostalService();
-			}
-		}
 
 		this.status = orderRecord.getStatus();
 		this.priority = orderRecord.getPriority();

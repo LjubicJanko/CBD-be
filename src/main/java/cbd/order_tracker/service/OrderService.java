@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -38,7 +39,7 @@ public class OrderService {
 	public OrderDTO createOrder(OrderRecord order) {
 		OrderRecord newOrder = new OrderRecord(order);
 		OrderRecord orderRecord = orderRepository.save(newOrder);
-		return OrderMapper.toDto(orderRecord);
+		return OrderMapper.toDto(orderRecord, new ArrayList<>());
 	}
 
 	public OrderDTO updateOrder(OrderRecord order) {
@@ -56,8 +57,9 @@ public class OrderService {
 
 		orderRecord.setLegalEntity(order.isLegalEntity());
 
+		var history = getOrderStatusHistory(order.getId());
 
-		return OrderMapper.toDto(orderRepository.save(orderRecord));
+		return OrderMapper.toDto(orderRepository.save(orderRecord), history);
 	}
 
 	public OrderDTO changeExecutionStatus(Long id, OrderExecutionStatus executionStatus, String note) {
@@ -68,7 +70,8 @@ public class OrderService {
 		orderRecord.setPausingComment(note);
 
 		orderRepository.save(orderRecord);
-		return OrderMapper.toDto(orderRecord);
+		var history = getOrderStatusHistory(id);
+		return OrderMapper.toDto(orderRecord, history);
 	}
 
 	public OrderDTO pauseOrder(Long id, String pausingComment) {
@@ -79,7 +82,9 @@ public class OrderService {
 		orderRecord.setPausingComment(pausingComment);
 
 		orderRepository.save(orderRecord);
-		return OrderMapper.toDto(orderRecord);
+
+		var history = getOrderStatusHistory(id);
+		return OrderMapper.toDto(orderRecord, history);
 	}
 
 	public OrderDTO reactivateOrder(Long id) {
@@ -89,7 +94,8 @@ public class OrderService {
 		orderRecord.setExecutionStatus(OrderExecutionStatus.ACTIVE);
 
 		orderRepository.save(orderRecord);
-		return OrderMapper.toDto(orderRecord);
+		var history = getOrderStatusHistory(id);
+		return OrderMapper.toDto(orderRecord, history);
 	}
 
 	public OrderDTO changeStatus(Long id, String closingComment, String postalCode, String postalService) {
@@ -98,7 +104,7 @@ public class OrderService {
 		try {
 			String currentUser = UserUtil.getCurrentUser();
 
-			List<OrderStatusHistory> historyList = orderRecord.getStatusHistory();
+			List<OrderStatusHistory> historyList = getOrderStatusHistory(id);
 			var lastHistoryRecord = historyList.get(historyList.size() - 1);
 			lastHistoryRecord.setClosingComment(closingComment);
 			lastHistoryRecord.setUser(currentUser);
@@ -109,9 +115,11 @@ public class OrderService {
 		} catch (IllegalStateException error) {
 			System.out.println(error.getMessage());
 		}
-		return OrderMapper.toDto(orderRecord);
+		var history = getOrderStatusHistory(id);
+		return OrderMapper.toDto(orderRecord, history);
 	}
 
+	@Transactional
 	public OrderDTO addPayment(Long id, PaymentRequestDto payment) {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
@@ -120,9 +128,11 @@ public class OrderService {
 		orderRecord.addPayment(payment);
 		orderRecord = orderRepository.save(orderRecord);
 
-		return OrderMapper.toDto(orderRecord);
+		var history = getOrderStatusHistory(id);
+		return OrderMapper.toDto(orderRecord, history);
 	}
 
+	@Transactional
 	public OrderDTO editPayment(Long orderId, Payment updatedPayment) {
 		OrderRecord orderRecord = orderRepository.findById(orderId)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
@@ -148,7 +158,8 @@ public class OrderService {
 
 		orderRepository.save(orderRecord);
 
-		return OrderMapper.toDto(orderRecord);
+		var history = getOrderStatusHistory(orderId);
+		return OrderMapper.toDto(orderRecord, history);
 	}
 
 
@@ -172,14 +183,16 @@ public class OrderService {
 
 		paymentRepository.delete(paymentToDelete);
 
-		return OrderMapper.toDto(orderRecord);
+		var history = getOrderStatusHistory(orderId);
+		return OrderMapper.toDto(orderRecord, history);
 	}
 
 
 	public OrderDTO getOrderById(Long id) {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
-		return OrderMapper.toDto(orderRecord);
+		var history = getOrderStatusHistory(id);
+		return OrderMapper.toDto(orderRecord, history);
 	}
 
 	public PageableResponse<OrderOverviewDto> fetchPageable(
@@ -211,6 +224,23 @@ public class OrderService {
 				.map(OrderMapper::toOverviewDto)
 				.collect(Collectors.toList());
 
+		orderOverviewDtos = orderOverviewDtos.stream().map(orderOverviewDto -> {
+			if(orderOverviewDto.getDateWhenMovedToDone() != null) return  orderOverviewDto;
+
+//			old data, need to fetch it
+			var history = getOrderStatusHistory(orderOverviewDto.getId());
+
+			for (OrderStatusHistory historyRecord : history) {
+				if (historyRecord.getStatus().equals(OrderStatus.DONE)) {
+					orderOverviewDto.setDateWhenMovedToDone(historyRecord.getCreationTime().toString());
+				} else if (historyRecord.getStatus().equals(OrderStatus.SHIPPED)) {
+					orderOverviewDto.setPostalCode(historyRecord.getPostalCode());
+					orderOverviewDto.setPostalService(historyRecord.getPostalService());
+				}
+			}
+			return orderOverviewDto;
+		}).collect(Collectors.toList());
+
 		return new PageableResponse<>(
 				page, perPage, orderRecords.getTotalPages(),
 				orderRecords.getTotalElements(), orderOverviewDtos);
@@ -230,7 +260,10 @@ public class OrderService {
 
 
 		return orderRecordList.stream()
-				.map(OrderMapper::toDto)
+				.map(orderRecord -> {
+					var history = getOrderStatusHistory(orderRecord.getId());
+					return OrderMapper.toDto(orderRecord, history);
+				})
 				.collect(Collectors.toList());
 	}
 
@@ -272,5 +305,9 @@ public class OrderService {
 
 		return new PageableResponse<OrderOverviewDto>(page, perPage, orderRecords.getTotalPages(),
 				orderRecords.getTotalElements(), orderOverviewDtos);
+	}
+
+	public List<Payment> getPayments(Long orderId) {
+		return paymentRepository.findByOrderId(orderId);
 	}
 }
