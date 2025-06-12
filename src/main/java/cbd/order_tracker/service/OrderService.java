@@ -216,17 +216,17 @@ public class OrderService {
 		Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(direction, sortProp));
 
 		// Fetch records with unified query
-		Page<OrderRecord> orderRecords = orderRepository.findBySearchAndFilters(
+		Page<OrderOverviewDto> orderDtos = orderRepository.findOverviewBySearchAndFilters(
 				searchTerm, statuses, priorities, executionStatuses, pageRequest);
 
 		// Map results to DTOs
-		var orderOverviewDtos = orderRecords.stream()
-				.map(OrderMapper::toOverviewDto)
-				.collect(Collectors.toList());
+//		var orderOverviewDtos = orderRecords.stream()
+//				.map(OrderMapper::toOverviewDto)
+//				.collect(Collectors.toList());
 
 		return new PageableResponse<>(
-				page, perPage, orderRecords.getTotalPages(),
-				orderRecords.getTotalElements(), orderOverviewDtos);
+				page, perPage, orderDtos.getTotalPages(),
+				orderDtos.getTotalElements(), orderDtos.getContent());
 	}
 
 	public List<OrderDTO> getAll(List<OrderStatus> statuses) {

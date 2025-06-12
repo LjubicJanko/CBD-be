@@ -4,6 +4,7 @@ import cbd.order_tracker.model.OrderExecutionStatus;
 import cbd.order_tracker.model.OrderPriority;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
+import cbd.order_tracker.model.dto.OrderOverviewDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,16 +26,22 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 	@Query("SELECT o FROM OrderRecord o WHERE (o.name LIKE %:nameTerm% OR o.description LIKE %:descriptionTerm%) AND o.deleted = false")
 	Page<OrderRecord> findByNameContainingOrDescriptionContaining(String nameTerm, String descriptionTerm, Pageable pageable);
 
-	@Query("SELECT o FROM OrderRecord o WHERE " +
-			"(:searchTerm IS NULL OR o.name LIKE %:searchTerm% OR o.description LIKE %:searchTerm%) AND " +
+	@Query("SELECT new cbd.order_tracker.model.dto.OrderOverviewDto(" +
+			"o.id, o.name, o.description, o.plannedEndingDate, o.status, o.priority, o.executionStatus, " +
+			"o.dateWhenMovedToDone, o.postalCode, o.postalService, o.salePrice, o.salePriceWithTax, " +
+			"o.legalEntity, o.amountPaid) " +
+			"FROM OrderRecord o " +
+			"WHERE (:searchTerm IS NULL OR o.name LIKE %:searchTerm% OR o.description LIKE %:searchTerm%) AND " +
 			"(:statuses IS NULL OR o.status IN :statuses) AND " +
 			"(:priorities IS NULL OR o.priority IN :priorities) AND " +
 			"(:executionStatuses IS NULL OR o.executionStatus IN :executionStatuses) AND " +
 			"o.deleted = false")
-	Page<OrderRecord> findBySearchAndFilters(
+	Page<OrderOverviewDto> findOverviewBySearchAndFilters(
 			@Param("searchTerm") String searchTerm,
 			@Param("statuses") List<OrderStatus> statuses,
 			@Param("priorities") List<OrderPriority> priorities,
 			@Param("executionStatuses") List<OrderExecutionStatus> executionStatuses,
-			Pageable pageable);
+			Pageable pageable
+	);
+
 }

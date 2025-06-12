@@ -4,6 +4,7 @@ import cbd.order_tracker.model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class OrderOverviewDto {
 
@@ -40,6 +41,39 @@ public class OrderOverviewDto {
 		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
 		this.setAmountLeftToPay(amountLefToPay);
 	}
+
+	public OrderOverviewDto(
+			Long id,
+			String name,
+			String description,
+			LocalDate plannedEndingDate,
+			OrderStatus status,
+			OrderPriority priority,
+			OrderExecutionStatus executionStatus,
+			LocalDateTime dateWhenMovedToDone,
+			String postalCode,
+			String postalService,
+			BigDecimal salePrice,
+			BigDecimal salePriceWithTax,
+			boolean legalEntity,
+			BigDecimal amountPaid
+	) {
+		this.id = id;
+		this.name = name;
+		this.description = description;
+		this.plannedEndingDate = plannedEndingDate;
+		this.status = status;
+		this.priority = priority;
+		this.executionStatus = executionStatus;
+		this.dateWhenMovedToDone = dateWhenMovedToDone != null ? String.valueOf(dateWhenMovedToDone) : null;
+		this.postalCode = postalCode;
+		this.postalService = postalService;
+
+		BigDecimal priceForCalculation = legalEntity ? salePriceWithTax : salePrice;
+		BigDecimal amountLeftToPay = priceForCalculation.subtract(amountPaid);
+		this.setAmountLeftToPay(amountLeftToPay);
+	}
+
 
 	// Getters and Setters
 	public Long getId() {
