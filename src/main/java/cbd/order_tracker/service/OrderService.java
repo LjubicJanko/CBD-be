@@ -224,23 +224,6 @@ public class OrderService {
 				.map(OrderMapper::toOverviewDto)
 				.collect(Collectors.toList());
 
-		orderOverviewDtos = orderOverviewDtos.stream().map(orderOverviewDto -> {
-			if(orderOverviewDto.getDateWhenMovedToDone() != null) return  orderOverviewDto;
-
-//			old data, need to fetch it
-			var history = getOrderStatusHistory(orderOverviewDto.getId());
-
-			for (OrderStatusHistory historyRecord : history) {
-				if (historyRecord.getStatus().equals(OrderStatus.DONE)) {
-					orderOverviewDto.setDateWhenMovedToDone(historyRecord.getCreationTime().toString());
-				} else if (historyRecord.getStatus().equals(OrderStatus.SHIPPED)) {
-					orderOverviewDto.setPostalCode(historyRecord.getPostalCode());
-					orderOverviewDto.setPostalService(historyRecord.getPostalService());
-				}
-			}
-			return orderOverviewDto;
-		}).collect(Collectors.toList());
-
 		return new PageableResponse<>(
 				page, perPage, orderRecords.getTotalPages(),
 				orderRecords.getTotalElements(), orderOverviewDtos);

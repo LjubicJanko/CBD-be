@@ -32,6 +32,10 @@ public class OrderOverviewDto {
 		this.priority = orderRecord.getPriority();
 		this.executionStatus = orderRecord.getExecutionStatus();
 
+		this.dateWhenMovedToDone = String.valueOf(orderRecord.getDateWhenMovedToDone());
+		this.postalCode = orderRecord.getPostalCode();
+		this.postalService = orderRecord.getPostalService();
+
 		BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
 		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
 		this.setAmountLeftToPay(amountLefToPay);
