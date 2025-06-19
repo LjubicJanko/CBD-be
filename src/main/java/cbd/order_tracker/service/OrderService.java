@@ -259,7 +259,7 @@ public class OrderService {
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		String username = auth.getName(); // Assumes username is the principal
-		User user = userRepository.findByUsernameWithRoles(username)
+		User user = userRepository.findByUsernameWithRolesAndPrivileges(username)
 				.orElseThrow(() -> new RuntimeException("User not found"));
 
 		return OrderMapper.toDto(orderRecord, history, user.getRoles());
