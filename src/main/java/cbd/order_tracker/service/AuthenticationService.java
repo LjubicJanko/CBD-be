@@ -12,9 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthenticationService {
@@ -35,13 +33,15 @@ public class AuthenticationService {
 		this.rolesRepository = rolesRepository;
 	}
 
+	@Transactional
 	public User signup(RegisterUserDto registerUserDto) {
-		var role = rolesRepository.findByName(registerUserDto.getRole());
+		var role = rolesRepository.findByNameWithPrivileges(registerUserDto.getRole())
+				.orElseThrow(() -> new RuntimeException("Role not found"));
 		var user = new User(registerUserDto, role, passwordEncoder.encode(registerUserDto.getPassword()));
-
 		return userRepository.save(user);
 	}
 
+	@Transactional(readOnly = true)
 	public User authenticate(LoginUserDto input) {
 		authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(
@@ -49,24 +49,19 @@ public class AuthenticationService {
 						input.getPassword()
 				)
 		);
-
-		return userRepository.findByUsername(input.getUsername()).orElseThrow();
+		return userRepository.findByUsernameWithRolesAndPrivileges(input.getUsername())
+				.orElseThrow(() -> new RuntimeException("User not found"));
 	}
 
-
+	@Transactional
 	public UserDto changePassword(ChangePasswordDto changePasswordDto) {
-		var user = userRepository.findByUsername(changePasswordDto.getUsername()).orElseThrow();
-
-		// Verify old password
+		var user = userRepository.findByUsernameWithRolesAndPrivileges(changePasswordDto.getUsername())
+				.orElseThrow(() -> new RuntimeException("User not found"));
 		if (!passwordEncoder.matches(changePasswordDto.getOldPassword(), user.getPassword())) {
 			throw new IllegalArgumentException("Old password is incorrect");
 		}
-
-		// Update password
 		user.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
 		var savedUser = userRepository.save(user);
-
 		return UserMapper.toUserDto(savedUser);
 	}
-
 }

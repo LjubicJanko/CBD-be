@@ -6,6 +6,7 @@ import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.repository.OrderRepository;
 import cbd.order_tracker.repository.OrderStatusHistoryRepository;
 import cbd.order_tracker.repository.PaymentRepository;
+import cbd.order_tracker.repository.UserRepository;
 import cbd.order_tracker.util.OrderMapper;
 import cbd.order_tracker.util.UserUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,10 +39,19 @@ public class OrderService {
 	@Autowired
 	private OrderStatusHistoryRepository statusHistoryRepository;
 
+	@Autowired
+	private UserRepository userRepository;
+
 	public OrderDTO createOrder(OrderRecord order) {
 		OrderRecord newOrder = new OrderRecord(order);
 		OrderRecord orderRecord = orderRepository.save(newOrder);
-		return OrderMapper.toDto(orderRecord, new ArrayList<>());
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, new ArrayList<>(), user.getRoles());
+//		return OrderMapper.toDto(orderRecord, new ArrayList<>());
 	}
 
 	public OrderDTO updateOrder(OrderRecord order) {
@@ -59,7 +71,11 @@ public class OrderService {
 
 		var history = getOrderStatusHistory(order.getId());
 
-		return OrderMapper.toDto(orderRepository.save(orderRecord), history);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+		return OrderMapper.toDto(orderRepository.save(orderRecord), history, user.getRoles());
 	}
 
 	public OrderDTO changeExecutionStatus(Long id, OrderExecutionStatus executionStatus, String note) {
@@ -70,8 +86,15 @@ public class OrderService {
 		orderRecord.setPausingComment(note);
 
 		orderRepository.save(orderRecord);
-		var history = getOrderStatusHistory(id);
-		return OrderMapper.toDto(orderRecord, history);
+//		var history = getOrderStatusHistory(id);
+//		return OrderMapper.toDto(orderRecord, history);
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
 	}
 
 	public OrderDTO pauseOrder(Long id, String pausingComment) {
@@ -83,8 +106,15 @@ public class OrderService {
 
 		orderRepository.save(orderRecord);
 
-		var history = getOrderStatusHistory(id);
-		return OrderMapper.toDto(orderRecord, history);
+//		var history = getOrderStatusHistory(id);
+//		return OrderMapper.toDto(orderRecord, history);
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
 	}
 
 	public OrderDTO reactivateOrder(Long id) {
@@ -94,8 +124,15 @@ public class OrderService {
 		orderRecord.setExecutionStatus(OrderExecutionStatus.ACTIVE);
 
 		orderRepository.save(orderRecord);
-		var history = getOrderStatusHistory(id);
-		return OrderMapper.toDto(orderRecord, history);
+//		var history = getOrderStatusHistory(id);
+//		return OrderMapper.toDto(orderRecord, history);
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
 	}
 
 	public OrderDTO changeStatus(Long id, String closingComment, String postalCode, String postalService) {
@@ -115,8 +152,15 @@ public class OrderService {
 		} catch (IllegalStateException error) {
 			System.out.println(error.getMessage());
 		}
-		var history = getOrderStatusHistory(id);
-		return OrderMapper.toDto(orderRecord, history);
+//		var history = getOrderStatusHistory(id);
+//		return OrderMapper.toDto(orderRecord, history);
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
 	}
 
 	@Transactional
@@ -128,8 +172,15 @@ public class OrderService {
 		orderRecord.addPayment(payment);
 		orderRecord = orderRepository.save(orderRecord);
 
-		var history = getOrderStatusHistory(id);
-		return OrderMapper.toDto(orderRecord, history);
+//		var history = getOrderStatusHistory(id);
+//		return OrderMapper.toDto(orderRecord, history);
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
 	}
 
 	@Transactional
@@ -158,8 +209,15 @@ public class OrderService {
 
 		orderRepository.save(orderRecord);
 
-		var history = getOrderStatusHistory(orderId);
-		return OrderMapper.toDto(orderRecord, history);
+//		var history = getOrderStatusHistory(orderId);
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(orderId);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
+//		return OrderMapper.toDto(orderRecord, history);
 	}
 
 
@@ -183,16 +241,28 @@ public class OrderService {
 
 		paymentRepository.delete(paymentToDelete);
 
-		var history = getOrderStatusHistory(orderId);
-		return OrderMapper.toDto(orderRecord, history);
+//		var history = getOrderStatusHistory(orderId);
+//		return OrderMapper.toDto(orderRecord, history);
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(orderId);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
 	}
 
 
 	public OrderDTO getOrderById(Long id) {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
-		var history = getOrderStatusHistory(id);
-		return OrderMapper.toDto(orderRecord, history);
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName(); // Assumes username is the principal
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
 	}
 
 	@Transactional(readOnly = true)
@@ -240,8 +310,14 @@ public class OrderService {
 
 		return orderRecordList.stream()
 				.map(orderRecord -> {
-					var history = getOrderStatusHistory(orderRecord.getId());
-					return OrderMapper.toDto(orderRecord, history);
+					List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(orderRecord.getId());
+					Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+					String username = auth.getName(); // Assumes username is the principal
+					User user = userRepository.findByUsernameWithRoles(username)
+							.orElseThrow(() -> new RuntimeException("User not found"));
+
+					return OrderMapper.toDto(orderRecord, history, user.getRoles());
+//					return OrderMapper.toDto(orderRecord, history);
 				})
 				.collect(Collectors.toList());
 	}

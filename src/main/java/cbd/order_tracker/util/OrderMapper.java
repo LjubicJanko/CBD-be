@@ -8,15 +8,13 @@ import cbd.order_tracker.model.dto.OrderOverviewDto;
 import cbd.order_tracker.model.dto.OrderTrackingDTO;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class OrderMapper {
 
-	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history) {
+	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history, Collection<Role> roles) {
 		OrderDTO dto = new OrderDTO();
-		Collection<Role> roles = UserUtil.getCurrentUserRoles();
 		Boolean isAdmin = roles.stream().anyMatch(role -> "admin".equals(role.getName()));
 
 		dto.setId(orderRecord.getId());

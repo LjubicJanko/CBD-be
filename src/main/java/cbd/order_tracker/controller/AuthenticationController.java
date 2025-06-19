@@ -1,6 +1,6 @@
 package cbd.order_tracker.controller;
 
-import cbd.order_tracker.model.LoginResponse;
+import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.model.dto.LoginUserDto;
 import cbd.order_tracker.model.dto.RegisterUserDto;
@@ -33,13 +33,26 @@ public class AuthenticationController {
 
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto loginUserDto) {
+
 		User authenticatedUser = authenticationService.authenticate(loginUserDto);
-
 		String jwtToken = jwtService.generateToken(authenticatedUser);
-
-		LoginResponse loginResponse = new LoginResponse(authenticatedUser.getId(), jwtToken, jwtService.getExpirationTime(), authenticatedUser.getRoles(), authenticatedUser.getFullName(), authenticatedUser.getUsername());
-
+		LoginResponse loginResponse = new LoginResponse(
+				authenticatedUser.getId(),
+				jwtToken,
+				jwtService.getExpirationTime(),
+				authenticatedUser.getRoles(),
+				authenticatedUser.getFullName(),
+				authenticatedUser.getUsername()
+		);
 		return ResponseEntity.ok(loginResponse);
+
+//		User authenticatedUser = authenticationService.authenticate(loginUserDto);
+//
+//		String jwtToken = jwtService.generateToken(authenticatedUser);
+//
+//		LoginResponse loginResponse = new LoginResponse(authenticatedUser.getId(), jwtToken, jwtService.getExpirationTime(), authenticatedUser.getRoles(), authenticatedUser.getFullName(), authenticatedUser.getUsername());
+//
+//		return ResponseEntity.ok(loginResponse);
 	}
 
 

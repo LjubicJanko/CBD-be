@@ -14,7 +14,7 @@ public class Privilege {
 
     private String name;
 
-    @ManyToMany(mappedBy = "privileges", fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "privileges", fetch = FetchType.LAZY)
     @JsonIgnore
     private Collection<Role> roles;
 
