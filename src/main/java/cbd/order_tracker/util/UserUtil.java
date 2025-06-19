@@ -3,28 +3,32 @@ package cbd.order_tracker.util;
 import cbd.order_tracker.model.Role;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.repository.UserRepository;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Set;
 
 
+@Component
 public class UserUtil {
-	private final UserRepository userRepository;
 
-	public UserUtil(UserRepository userRepository) {
-		this.userRepository = userRepository;
-	}
-
-	public Collection<Role> getCurrentUserRoles() {
+	public Set<Role> getCurrentUserRoles() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth == null || !auth.isAuthenticated()) {
 			throw new RuntimeException("No authenticated user found");
 		}
-		String username = auth.getName();
-		User user = userRepository.findByUsernameWithRoles(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
-		return user.getRoles();
+
+		Object principal = auth.getPrincipal();
+
+		if (principal instanceof User user) {
+			return user.getRoles();
+		} else {
+			throw new RuntimeException("Unexpected principal type");
+		}
 	}
 
 	public static String getCurrentUser() {

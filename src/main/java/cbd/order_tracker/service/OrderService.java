@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -41,6 +42,9 @@ public class OrderService {
 
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private UserUtil userUtil;
 
 	public OrderDTO createOrder(OrderRecord order) {
 		OrderRecord newOrder = new OrderRecord(order);
@@ -257,12 +261,15 @@ public class OrderService {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName(); // Assumes username is the principal
-		User user = userRepository.findByUsernameWithRolesAndPrivileges(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+//		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//		CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal(); // or whatever your impl is
+//		User user = principal.getUser();
+//		User user = userRepository.findByUsernameWithRolesAndPrivileges(username)
+//				.orElseThrow(() -> new RuntimeException("User not found"));
 
-		return OrderMapper.toDto(orderRecord, history, user.getRoles());
+		Set<Role> roles = userUtil.getCurrentUserRoles();
+
+		return OrderMapper.toDto(orderRecord, history, roles);
 	}
 
 	@Transactional(readOnly = true)
