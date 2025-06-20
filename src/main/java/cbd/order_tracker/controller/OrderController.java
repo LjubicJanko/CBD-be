@@ -75,7 +75,6 @@ public class OrderController {
 
 	@PostMapping("/create")
 	public OrderDTO createOrder(@RequestBody OrderRecord order) {
-		System.out.println(order);
 		return orderService.createOrder(order);
 	}
 

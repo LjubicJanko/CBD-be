@@ -8,6 +8,7 @@ import cbd.order_tracker.model.dto.UserDto;
 import cbd.order_tracker.repository.RolesRepository;
 import cbd.order_tracker.repository.UserRepository;
 import cbd.order_tracker.util.UserMapper;
+import cbd.order_tracker.util.UserUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;

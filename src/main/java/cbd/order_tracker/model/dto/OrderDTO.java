@@ -18,7 +18,8 @@ public class OrderDTO {
 	private OrderPriority priority;
 	private OrderExecutionStatus executionStatus;
 	private String trackingId;
-	private List<OrderStatusHistory> statusHistory;
+	private List<OrderStatusHistoryDTO> statusHistory;
+
 	private List<Payment> payments;
 
 	private boolean isLegalEntity;
@@ -91,11 +92,11 @@ public class OrderDTO {
 		this.trackingId = trackingId;
 	}
 
-	public List<OrderStatusHistory> getStatusHistory() {
+	public List<OrderStatusHistoryDTO> getStatusHistory() {
 		return statusHistory;
 	}
 
-	public void setStatusHistory(List<OrderStatusHistory> statusHistory) {
+	public void setStatusHistory(List<OrderStatusHistoryDTO> statusHistory) {
 		this.statusHistory = statusHistory;
 	}
 

@@ -8,9 +8,11 @@ public class OrderStatusHistoryDTO {
 
     private Long id;
     private OrderStatus status;
-    private LocalDateTime timestamp;
-
-    // Getters and Setters
+    private String closingComment;
+    private LocalDateTime creationTime;
+    private String user; // can be full name, or username
+    private String postalCode;
+    private String postalService;
 
     public Long getId() {
         return id;
@@ -28,11 +30,43 @@ public class OrderStatusHistoryDTO {
         this.status = status;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public String getClosingComment() {
+        return closingComment;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    public void setClosingComment(String closingComment) {
+        this.closingComment = closingComment;
+    }
+
+    public LocalDateTime getCreationTime() {
+        return creationTime;
+    }
+
+    public void setCreationTime(LocalDateTime creationTime) {
+        this.creationTime = creationTime;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    public String getPostalService() {
+        return postalService;
+    }
+
+    public void setPostalService(String postalService) {
+        this.postalService = postalService;
     }
 }

@@ -2,14 +2,10 @@ package cbd.order_tracker.util;
 
 import cbd.order_tracker.model.Role;
 import cbd.order_tracker.model.User;
-import cbd.order_tracker.repository.UserRepository;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.Set;
 
 
@@ -31,12 +27,24 @@ public class UserUtil {
 		}
 	}
 
-	public static String getCurrentUser() {
+	public static User getCurrentUser() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		if (authentication != null && authentication.isAuthenticated()) {
 			Object principal = authentication.getPrincipal();
-			System.out.println(principal);
+			if (principal instanceof User) {
+				return ((User) principal);
+			}
+		}
+
+		return null;
+	}
+
+	public static String getCurrentUserName() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication != null && authentication.isAuthenticated()) {
+			Object principal = authentication.getPrincipal();
 			if (principal instanceof User) {
 				return ((User) principal).getFullName();
 			} else {

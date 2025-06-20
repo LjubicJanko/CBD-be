@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -143,7 +142,7 @@ public class OrderService {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 		try {
-			String currentUser = UserUtil.getCurrentUser();
+			String currentUser = UserUtil.getCurrentUserName();
 
 			List<OrderStatusHistory> historyList = getOrderStatusHistory(id);
 			var lastHistoryRecord = historyList.get(historyList.size() - 1);
@@ -261,12 +260,6 @@ public class OrderService {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-//		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-//		CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal(); // or whatever your impl is
-//		User user = principal.getUser();
-//		User user = userRepository.findByUsernameWithRolesAndPrivileges(username)
-//				.orElseThrow(() -> new RuntimeException("User not found"));
-
 		Set<Role> roles = userUtil.getCurrentUserRoles();
 
 		return OrderMapper.toDto(orderRecord, history, roles);

@@ -1,12 +1,13 @@
 package cbd.order_tracker.model;
 
 import cbd.order_tracker.util.UserUtil;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+@JsonIgnoreProperties("order")
 @Entity
 public class OrderStatusHistory {
 
@@ -33,7 +34,7 @@ public class OrderStatusHistory {
 	}
 
 	public OrderStatusHistory(OrderRecord order, OrderStatus status, String postalCode, String postalService) {
-		String currentUser = UserUtil.getCurrentUser();
+		String currentUser = UserUtil.getCurrentUserName();
 		this.user = currentUser;
 		this.order = order;
 		this.status = status;
@@ -53,6 +54,7 @@ public class OrderStatusHistory {
 	}
 
 	public OrderRecord getOrder() {
+		System.out.println("OrderRecord was lazily loaded!");
 		return order;
 	}
 
@@ -106,5 +108,17 @@ public class OrderStatusHistory {
 
 	public void setPostalService(String postalService) {
 		this.postalService = postalService;
+	}
+	@Override
+	public String toString() {
+		return "OrderStatusHistory{" +
+				"id=" + id +
+				", status=" + status +
+				", creationTime=" + creationTime +
+				", user='" + user + '\'' +
+				", closingComment='" + closingComment + '\'' +
+				", postalCode='" + postalCode + '\'' +
+				", postalService='" + postalService + '\'' +
+				'}';
 	}
 }

@@ -5,6 +5,7 @@ import cbd.order_tracker.model.OrderStatusHistory;
 import cbd.order_tracker.model.Role;
 import cbd.order_tracker.model.dto.OrderDTO;
 import cbd.order_tracker.model.dto.OrderOverviewDto;
+import cbd.order_tracker.model.dto.OrderStatusHistoryDTO;
 import cbd.order_tracker.model.dto.OrderTrackingDTO;
 
 import java.math.BigDecimal;
@@ -12,6 +13,25 @@ import java.util.Collection;
 import java.util.List;
 
 public class OrderMapper {
+
+	public static List<OrderStatusHistoryDTO> mapStatusHistory(List<OrderStatusHistory> history) {
+		return history.stream()
+				.map(h -> {
+					OrderStatusHistoryDTO hDto = new OrderStatusHistoryDTO();
+					hDto.setId(h.getId());
+					hDto.setStatus(h.getStatus());
+					hDto.setClosingComment(h.getClosingComment());
+					hDto.setCreationTime(h.getCreationTime());
+					hDto.setPostalCode(h.getPostalCode());
+					hDto.setPostalService(h.getPostalService());
+					if (h.getUser() != null) {
+						hDto.setUser(h.getUser());
+					}
+					return hDto;
+				})
+				.toList();
+	}
+
 
 	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history, Collection<Role> roles) {
 		OrderDTO dto = new OrderDTO();
@@ -26,7 +46,8 @@ public class OrderMapper {
 		dto.setExecutionStatus(orderRecord.getExecutionStatus());
 		dto.setPausingComment(orderRecord.getPausingComment());
 		dto.setTrackingId(orderRecord.getTrackingId());
-		dto.setStatusHistory(history);
+		dto.setStatusHistory(mapStatusHistory(history));
+
 		dto.setAcquisitionCost(orderRecord.getAcquisitionCost());
 		dto.setLegalEntity(orderRecord.isLegalEntity());
 		dto.setPlannedEndingDate(orderRecord.getPlannedEndingDate());
