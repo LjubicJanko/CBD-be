@@ -34,16 +34,13 @@ public class OrderStatusHistory {
 	}
 
 	public OrderStatusHistory(OrderRecord order, OrderStatus status, String postalCode, String postalService) {
-		String currentUser = UserUtil.getCurrentUserName();
-		this.user = currentUser;
+		this.user = UserUtil.getCurrentUserName();
 		this.order = order;
 		this.status = status;
 		this.creationTime = LocalDateTime.now();
-		this.postalCode = postalCode;  // Optional
-		this.postalService = postalService;  // Optional
+		this.postalCode = postalCode;
+		this.postalService = postalService;
 	}
-
-	// Getters and setters
 
 	public Long getId() {
 		return id;
@@ -109,16 +106,23 @@ public class OrderStatusHistory {
 	public void setPostalService(String postalService) {
 		this.postalService = postalService;
 	}
+
 	@Override
 	public String toString() {
-		return "OrderStatusHistory{" +
-				"id=" + id +
-				", status=" + status +
-				", creationTime=" + creationTime +
-				", user='" + user + '\'' +
-				", closingComment='" + closingComment + '\'' +
-				", postalCode='" + postalCode + '\'' +
-				", postalService='" + postalService + '\'' +
-				'}';
+		return "OrderStatusHistory{id=" + id + ", status=" + status + "}";
 	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof OrderStatusHistory that)) return false;
+		return id != null && id.equals(that.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode();
+	}
+
 }

@@ -45,14 +45,6 @@ public class AuthenticationController {
 				authenticatedUser.getUsername()
 		);
 		return ResponseEntity.ok(loginResponse);
-
-//		User authenticatedUser = authenticationService.authenticate(loginUserDto);
-//
-//		String jwtToken = jwtService.generateToken(authenticatedUser);
-//
-//		LoginResponse loginResponse = new LoginResponse(authenticatedUser.getId(), jwtToken, jwtService.getExpirationTime(), authenticatedUser.getRoles(), authenticatedUser.getFullName(), authenticatedUser.getUsername());
-//
-//		return ResponseEntity.ok(loginResponse);
 	}
 
 

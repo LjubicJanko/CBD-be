@@ -8,9 +8,10 @@ import cbd.order_tracker.model.dto.UserDto;
 import cbd.order_tracker.repository.RolesRepository;
 import cbd.order_tracker.repository.UserRepository;
 import cbd.order_tracker.util.UserMapper;
-import cbd.order_tracker.util.UserUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,16 +43,26 @@ public class AuthenticationService {
 		return userRepository.save(user);
 	}
 
-	@Transactional(readOnly = true)
 	public User authenticate(LoginUserDto input) {
-		authenticationManager.authenticate(
+		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(
 						input.getUsername(),
 						input.getPassword()
 				)
 		);
-		return userRepository.findByUsernameWithRolesAndPrivileges(input.getUsername())
-				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		Object principal = authentication.getPrincipal();
+
+		if (principal instanceof User user) {
+			return user;
+		}
+
+		if (principal instanceof UserDetails userDetails) {
+			return userRepository.findByUsernameWithRolesAndPrivileges(userDetails.getUsername())
+					.orElseThrow(() -> new RuntimeException("User not found"));
+		}
+
+		throw new RuntimeException("Invalid principal type: " + principal.getClass().getName());
 	}
 
 	@Transactional
