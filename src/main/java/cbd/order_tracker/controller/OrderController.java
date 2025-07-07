@@ -4,6 +4,7 @@ import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.service.OrderService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,13 +14,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
 	private final OrderService orderService;
-
-	public OrderController(OrderService orderService) {
-		this.orderService = orderService;
-	}
 
 	@GetMapping("/get/{id}")
 	public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id) {
@@ -56,6 +54,11 @@ public class OrderController {
 	@GetMapping("/payments/{id}")
 	public List<Payment> getPayments(@PathVariable Long id) {
 		return orderService.getPayments(id);
+	}
+
+	@GetMapping("/history/{id}")
+	public List<OrderStatusHistoryDTO> getHistory(@PathVariable Long id) {
+		return orderService.getHistory(id);
 	}
 
 	@GetMapping("/search")
@@ -110,17 +113,17 @@ public class OrderController {
 	}
 
 	@PostMapping("/addPayment/{id}")
-	public ResponseEntity<OrderDTO> addPayment(@PathVariable Long id, @RequestBody PaymentRequestDto payment) {
+	public ResponseEntity<UpdatePaymentsResponse> addPayment(@PathVariable Long id, @RequestBody PaymentRequestDto payment) {
 		return new ResponseEntity<>(orderService.addPayment(id, payment), HttpStatus.OK);
 	}
 
 	@PutMapping("/editPayment/{id}")
-	public ResponseEntity<OrderDTO> editPayment(@PathVariable Long id, @RequestBody Payment payment) {
+	public ResponseEntity<UpdatePaymentsResponse> editPayment(@PathVariable Long id, @RequestBody Payment payment) {
 		return new ResponseEntity<>(orderService.editPayment(id, payment), HttpStatus.OK);
 	}
 
 	@PutMapping("/deletePayment/{id}")
-	public ResponseEntity<OrderDTO> deletePayment(@PathVariable Long id, @RequestParam Long paymentId) {
+	public ResponseEntity<UpdatePaymentsResponse> deletePayment(@PathVariable Long id, @RequestParam Long paymentId) {
 		return new ResponseEntity<>(orderService.deletePayment(id, paymentId), HttpStatus.OK);
 	}
 
