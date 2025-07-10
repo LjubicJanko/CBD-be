@@ -47,6 +47,8 @@ public class OrderMapper {
 		dto.setPausingComment(orderRecord.getPausingComment());
 		dto.setTrackingId(orderRecord.getTrackingId());
 		dto.setStatusHistory(mapStatusHistory(history));
+		dto.setPostalCode(orderRecord.getPostalCode());
+		dto.setPostalService(orderRecord.getPostalService());
 
 		dto.setAcquisitionCost(orderRecord.getAcquisitionCost());
 		dto.setLegalEntity(orderRecord.isLegalEntity());

@@ -9,6 +9,7 @@ import cbd.order_tracker.util.OrderMapper;
 import cbd.order_tracker.util.PaymentMapper;
 import cbd.order_tracker.util.UserUtil;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
@@ -24,22 +25,14 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-	@Autowired
-	private OrderRepository orderRepository;
-
-	@Autowired
-	private PaymentRepository paymentRepository;
-
-	@Autowired
-	private OrderStatusHistoryRepository statusHistoryRepository;
-
-	@Autowired
-	private UserRepository userRepository;
-
-	@Autowired
-	private UserUtil userUtil;
+	private final UserUtil userUtil;
+	private final UserRepository userRepository;
+	private final OrderRepository orderRepository;
+	private final PaymentRepository paymentRepository;
+	private final OrderStatusHistoryRepository statusHistoryRepository;
 
 	@Override
 	public OrderDTO createOrder(OrderRecord order) {
