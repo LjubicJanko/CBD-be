@@ -6,7 +6,7 @@ import cbd.order_tracker.model.dto.CompanyDto;
 import cbd.order_tracker.model.dto.response.CompanyOverviewResDto;
 import cbd.order_tracker.repository.CompanyRepository;
 import cbd.order_tracker.repository.UserRepository;
-import cbd.order_tracker.service.CompanyService;
+import cbd.order_tracker.service.inter.CompanyService;
 import cbd.order_tracker.util.CompanyMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;

@@ -3,7 +3,7 @@ package cbd.order_tracker.controller;
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
-import cbd.order_tracker.service.OrderService;
+import cbd.order_tracker.service.inter.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

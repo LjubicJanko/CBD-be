@@ -2,6 +2,7 @@ package cbd.order_tracker.model.company;
 
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.User;
+import cbd.order_tracker.model.config.GenericConfig;
 import cbd.order_tracker.model.dto.CompanyDto;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -40,6 +41,14 @@ public class Company {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> employees = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "company_generic_config",
+            joinColumns = @JoinColumn(name = "company_id"),
+            inverseJoinColumns = @JoinColumn(name = "config_id")
+    )
+    private Set<GenericConfig> genericConfigs = new HashSet<>();
 
     public Company(CompanyDto companyDto) {
         this.name = companyDto.getName();

@@ -10,8 +10,8 @@ import cbd.order_tracker.model.dto.OrderDTO;
 import cbd.order_tracker.model.dto.OrderOverviewDto;
 import cbd.order_tracker.model.dto.PageableResponse;
 import cbd.order_tracker.model.dto.response.CompanyOverviewResDto;
-import cbd.order_tracker.service.CompanyService;
-import cbd.order_tracker.service.OrderService;
+import cbd.order_tracker.service.inter.CompanyService;
+import cbd.order_tracker.service.inter.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,13 +38,11 @@ public class CompanyController {
     @PostMapping("/getCompanies")
     @CheckCompanyAccess(paramIndex = 0, list = true)
     public List<CompanyOverviewResDto> getCompanies(@RequestBody List<Long> ids) {
-        System.out.println("you got access");
         return companyService.getCompanies(ids);
     }
 
     @GetMapping("/all")
     public List<CompanyOverviewResDto> getAll(){
-        System.out.println("you got access");
         return companyService.getAll();
     }
 
@@ -66,8 +64,8 @@ public class CompanyController {
             @RequestParam(required = false) List<OrderPriority> priorities,
             @RequestParam(required = false) String sortCriteria,
             @RequestParam(required = false) String sort,
-            @RequestParam(required = true) Integer page,
-            @RequestParam(required = true) Integer perPage,
+            @RequestParam() Integer page,
+            @RequestParam() Integer perPage,
             @RequestParam(required = false) List<OrderExecutionStatus> executionStatuses) {
 
             // Apply default filter for executionStatuses if not provided
