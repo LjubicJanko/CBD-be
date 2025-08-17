@@ -1,8 +1,10 @@
 package cbd.order_tracker.model;
 
+import cbd.order_tracker.model.company.Company;
 import cbd.order_tracker.model.dto.RegisterUserDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,6 +15,7 @@ import java.util.*;
 
 @Table(name = "users")
 @Entity
+@Data
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -43,6 +46,9 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
     )
     private Set<Role> roles = new HashSet<>();
+
+    @ManyToMany(mappedBy = "employees", fetch = FetchType.LAZY)
+    private Set<Company> companies = new HashSet<>();
 
     public User() {}
 
@@ -95,21 +101,23 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() { return true; }
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
-    public void setUsername(String username) { this.username = username; }
-    public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles != null ? roles : new HashSet<>(); }
-    public void setPassword(String password) { this.password = password; }
-    public Date getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
-    public Date getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
 
     @Override
     public String toString() {
         return "User{id=" + id + ", fullName='" + fullName + "', username='" + username + "', createdAt=" + createdAt + ", updatedAt=" + updatedAt + "}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User other = (User) o;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

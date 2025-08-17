@@ -1,9 +1,13 @@
 package cbd.order_tracker.model;
 
+import cbd.order_tracker.model.company.Company;
+import lombok.Data;
+
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Data
 public class LoginResponse {
 	private Integer id;
 	private String token;
@@ -12,20 +16,15 @@ public class LoginResponse {
 	private Set<String> privileges;
 	private String name;
 	private String username;
-
-	public String getToken() {
-		return token;
-	}
-
-	public LoginResponse setToken(String token) {
-		this.token = token;
-		return this;
-	}
+	private Set<Long> companyIds;
 
 	public LoginResponse() {
 	}
 
-	public LoginResponse(Integer id, String token, long expiresIn, Collection<Role> roles, String fullName, String username) {
+
+	public LoginResponse(Integer id, String token, long expiresIn,
+						 Collection<Role> roles, String fullName,
+						 String username, Set<Company> companies) {
 		this.id = id;
 		this.token = token;
 		this.expiresIn = expiresIn;
@@ -38,55 +37,22 @@ public class LoginResponse {
 				.collect(Collectors.toSet());
 		this.name = fullName;
 		this.username = username;
-	}
 
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	public long getExpiresIn() {
-		return expiresIn;
+		// If NOT super admin, include company IDs
+		if (!this.roles.contains("super_admin")) {
+			this.companyIds = companies.stream()
+					.map(Company::getId)
+					.collect(Collectors.toSet());
+		}
 	}
 
 	public LoginResponse setExpiresIn(long expiresIn) {
 		this.expiresIn = expiresIn;
 		return this;
 	}
-
-	public Set<String> getRoles() {
-		return roles;
-	}
-
-	public void setRoles(Set<String> roles) {
-		this.roles = roles;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Set<String> getPrivileges() {
-		return privileges;
-	}
-
-	public void setPrivileges(Set<String> privileges) {
-		this.privileges = privileges;
+	public LoginResponse setToken(String token) {
+		this.token = token;
+		return this;
 	}
 
 	@Override

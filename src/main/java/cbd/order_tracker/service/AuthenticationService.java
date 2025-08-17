@@ -5,6 +5,7 @@ import cbd.order_tracker.model.dto.ChangePasswordDto;
 import cbd.order_tracker.model.dto.LoginUserDto;
 import cbd.order_tracker.model.dto.RegisterUserDto;
 import cbd.order_tracker.model.dto.UserDto;
+import cbd.order_tracker.model.dto.response.AuthResult;
 import cbd.order_tracker.repository.RolesRepository;
 import cbd.order_tracker.repository.UserRepository;
 import cbd.order_tracker.util.UserMapper;
@@ -15,6 +16,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class AuthenticationService {
@@ -43,27 +46,29 @@ public class AuthenticationService {
 		return userRepository.save(user);
 	}
 
-	public User authenticate(LoginUserDto input) {
+	public AuthResult authenticate(LoginUserDto input) {
 		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(
-						input.getUsername(),
-						input.getPassword()
-				)
+				new UsernamePasswordAuthenticationToken(input.getUsername(), input.getPassword())
 		);
 
 		Object principal = authentication.getPrincipal();
 
-		if (principal instanceof User user) {
-			return user;
-		}
-
-		if (principal instanceof UserDetails userDetails) {
-			return userRepository.findByUsernameWithRolesAndPrivileges(userDetails.getUsername())
+		User user;
+		if (principal instanceof User u) {
+			user = u;
+		} else if (principal instanceof UserDetails ud) {
+			user = userRepository.findByUsernameWithRolesAndPrivileges(ud.getUsername())
 					.orElseThrow(() -> new RuntimeException("User not found"));
+		} else {
+			throw new RuntimeException("Invalid principal type: " + principal.getClass().getName());
 		}
 
-		throw new RuntimeException("Invalid principal type: " + principal.getClass().getName());
+		// Fetch company IDs here instead of in controller
+		List<Long> companyIds = userRepository.findCompanyIdsByUsername(user.getUsername());
+
+		return new AuthResult(user, companyIds);
 	}
+
 
 	@Transactional
 	public UserDto changePassword(ChangePasswordDto changePasswordDto) {

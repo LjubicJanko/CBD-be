@@ -4,6 +4,7 @@ import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.model.dto.LoginUserDto;
 import cbd.order_tracker.model.dto.RegisterUserDto;
+import cbd.order_tracker.model.dto.response.AuthResult;
 import cbd.order_tracker.service.AuthenticationService;
 import cbd.order_tracker.service.JwtService;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RequestMapping("/api/auth")
 @RestController
@@ -33,18 +38,26 @@ public class AuthenticationController {
 
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto loginUserDto) {
+		AuthResult authResult = authenticationService.authenticate(loginUserDto);
+		User user = authResult.user();
+		List<Long> companyIds = authResult.companyIds();
 
-		User authenticatedUser = authenticationService.authenticate(loginUserDto);
-		String jwtToken = jwtService.generateToken(authenticatedUser);
-		LoginResponse loginResponse = new LoginResponse(
-				authenticatedUser.getId(),
+		Map<String, Object> claims = new HashMap<>();
+		claims.put("companyIds", companyIds);
+		claims.put("roles", user.getRoles().stream().map(Role::getName).toList());
+
+		String jwtToken = jwtService.generateToken(claims, user);
+
+		LoginResponse res = new LoginResponse(
+				user.getId(),
 				jwtToken,
 				jwtService.getExpirationTime(),
-				authenticatedUser.getRoles(),
-				authenticatedUser.getFullName(),
-				authenticatedUser.getUsername()
+				user.getRoles(),
+				user.getFullName(),
+				user.getUsername(),
+				user.getCompanies()
 		);
-		return ResponseEntity.ok(loginResponse);
+		return ResponseEntity.ok(res);
 	}
 
 

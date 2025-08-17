@@ -13,6 +13,8 @@ public interface OrderService {
 
     OrderExtensionDto createExtension(OrderExtensionReqDto order);
 
+    OrderDTO createOrder(Long companyId, OrderRecord order);
+
     OrderDTO updateOrder(OrderRecord order);
 
     OrderDTO changeExecutionStatus(Long id, OrderExecutionStatus executionStatus, String note);
@@ -32,6 +34,18 @@ public interface OrderService {
     OrderDTO getOrderById(Long id);
 
     PageableResponse<OrderOverviewDto> fetchPageable(
+            String searchTerm,
+            List<OrderStatus> statuses,
+            List<OrderPriority> priorities,
+            String sortCriteria,
+            String sort,
+            List<OrderExecutionStatus> executionStatuses,
+            Integer page,
+            Integer perPage
+    );
+
+    PageableResponse<OrderOverviewDto> fetchPageable(
+            Long companyId,
             String searchTerm,
             List<OrderStatus> statuses,
             List<OrderPriority> priorities,

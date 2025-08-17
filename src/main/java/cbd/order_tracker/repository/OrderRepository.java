@@ -44,4 +44,25 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 			Pageable pageable
 	);
 
+	@Query("SELECT new cbd.order_tracker.model.dto.OrderOverviewDto(" +
+			"o.id, o.name, o.description, o.plannedEndingDate, o.status, o.priority, o.executionStatus, " +
+			"o.dateWhenMovedToDone, o.postalCode, o.postalService, o.salePrice, o.salePriceWithTax, " +
+			"o.legalEntity, o.amountPaid) " +
+			"FROM OrderRecord o " +
+			"WHERE (:companyId IS NULL OR o.company.id = :companyId) AND " +
+			"(:searchTerm IS NULL OR o.name LIKE %:searchTerm% OR o.description LIKE %:searchTerm%) AND " +
+			"(:statuses IS NULL OR o.status IN :statuses) AND " +
+			"(:priorities IS NULL OR o.priority IN :priorities) AND " +
+			"(:executionStatuses IS NULL OR o.executionStatus IN :executionStatuses) AND " +
+			"o.deleted = false")
+	Page<OrderOverviewDto> findOverviewBySearchAndFilters(
+			@Param("companyId") Long companyId,
+			@Param("searchTerm") String searchTerm,
+			@Param("statuses") List<OrderStatus> statuses,
+			@Param("priorities") List<OrderPriority> priorities,
+			@Param("executionStatuses") List<OrderExecutionStatus> executionStatuses,
+			Pageable pageable
+	);
+
+
 }

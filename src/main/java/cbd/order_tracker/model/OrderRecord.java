@@ -1,8 +1,11 @@
 package cbd.order_tracker.model;
 
 import cbd.order_tracker.model.dto.PaymentRequestDto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Data;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -13,9 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Data
 @Entity
 @SQLRestriction("deleted = false")
+@Data
+@NoArgsConstructor
 public class OrderRecord {
 
 
@@ -32,6 +36,11 @@ public class OrderRecord {
 	private String pausingComment;
 	private LocalDateTime creationTime;
 	private boolean deleted = false;
+
+	@ManyToOne
+	@JoinColumn(name = "company_id", nullable = false)
+	@JsonIgnore
+	private Company company;
 
 	@Column(name = "legal_entity", nullable = false)
 	private boolean legalEntity;

@@ -36,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderRepository orderRepository;
 	private final PaymentRepository paymentRepository;
 	private final OrderStatusHistoryRepository statusHistoryRepository;
+	private final CompanyRepository companyRepository;
 
 	@Override
 	public OrderDTO createOrder(OrderRecord order) {
@@ -47,6 +48,24 @@ public class OrderServiceImpl implements OrderService {
 				.orElseThrow(() -> new RuntimeException("User not found"));
 
 		return OrderMapper.toDto(orderRecord, new ArrayList<>(), user.getRoles());
+	}
+
+	@Override
+	public OrderDTO createOrder(Long companyId, OrderRecord order) {
+		OrderRecord newOrder = new OrderRecord(order);
+		var company = companyRepository.findById(companyId)
+				.orElseThrow(() -> new RuntimeException("Company not found"));
+		newOrder.setCompany(company);
+
+		OrderRecord orderRecord = orderRepository.save(newOrder);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		System.out.println(auth);
+		String username = auth.getName();
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, new ArrayList<>(), user.getRoles());
+
 	}
 
 	@Override
@@ -255,6 +274,31 @@ public class OrderServiceImpl implements OrderService {
 				page, perPage, Sort.by(direction, sortProp).and(Sort.by("id"))
 		);
 		Page<OrderOverviewDto> orderDtos = orderRepository.findOverviewBySearchAndFilters(
+				searchTerm, statuses, priorities, executionStatuses, pageRequest);
+
+		return new PageableResponse<>(page, perPage, orderDtos.getTotalPages(),
+				orderDtos.getTotalElements(), orderDtos.getContent());
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public PageableResponse<OrderOverviewDto> fetchPageable(
+			Long companyId,
+			String searchTerm,
+			List<OrderStatus> statuses,
+			List<OrderPriority> priorities,
+			String sortCriteria,
+			String sort,
+			List<OrderExecutionStatus> executionStatuses,
+			Integer page,
+			Integer perPage) {
+		if (executionStatuses == null || executionStatuses.isEmpty()) {
+			executionStatuses = List.of(OrderExecutionStatus.ACTIVE, OrderExecutionStatus.PAUSED);
+		}
+		var direction = "asc".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
+		var sortProp = "creation-date".equals(sortCriteria) ? "creationTime" : "plannedEndingDate";
+		Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(direction, sortProp));
+		Page<OrderOverviewDto> orderDtos = orderRepository.findOverviewBySearchAndFilters(companyId,
 				searchTerm, statuses, priorities, executionStatuses, pageRequest);
 
 		return new PageableResponse<>(page, perPage, orderDtos.getTotalPages(),
