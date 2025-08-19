@@ -39,6 +39,13 @@ public class GenericConfigServiceImpl implements GenericConfigService {
 
     @Override
     public GenericConfigResDto create(GenericConfigReqDto config) {
+        genericConfigRepository.findByTypeAndValue(config.getType(), config.getValue())
+            .ifPresent(existing -> {
+                throw new IllegalArgumentException(
+                        "Config with value '" + config.getValue() + "' already exists for type " + config.getType()
+                );
+            });
+
         return GenericConfigMapper.toResDto(genericConfigRepository.save(new GenericConfig(config)));
     }
 

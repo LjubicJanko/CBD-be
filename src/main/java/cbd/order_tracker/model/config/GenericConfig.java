@@ -10,7 +10,12 @@ import lombok.NoArgsConstructor;
  * Generic company configuration entity that is distinguished by type, and defined by simple string value.
  */
 @Entity
-@Table(name = "generic_config")
+@Table(
+    name = "generic_config",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"type", "value"})
+    }
+)
 @Data
 @NoArgsConstructor
 public class GenericConfig {
@@ -22,7 +27,6 @@ public class GenericConfig {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private ConfigType type;
-
 
     @Column(nullable = false)
     private String value;
