@@ -87,4 +87,9 @@ public class CompanyController {
     {
         return companyService.updateEmployees(companyId, employeeIds);
     }
+
+    @PutMapping("/updateInfo")
+    public CompanyDto updateInfo(@RequestBody CompanyDto companyDto) {
+        return companyService.updateInfo(companyDto);
+    }
 }

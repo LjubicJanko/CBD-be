@@ -82,4 +82,18 @@ public class CompanyServiceImpl implements CompanyService {
         // 5. Save company - cascade persists join table changes
         return new CompanyDto(companyRepository.save(company));
     }
+
+    @Override
+    public CompanyDto updateInfo(CompanyDto companyDto) {
+        Company company = companyRepository.findById(companyDto.getId())
+                .orElseThrow(() -> new RuntimeException("Company not found"));
+
+        company.setName(companyDto.getName());
+        company.setCurrency(companyDto.getCurrency());
+        company.setVat(companyDto.getVat());
+        company.setColors(companyDto.getColors());
+        company.setWebsiteUrl(companyDto.getWebsiteUrl());
+
+        return new CompanyDto(companyRepository.save(company));
+    }
 }

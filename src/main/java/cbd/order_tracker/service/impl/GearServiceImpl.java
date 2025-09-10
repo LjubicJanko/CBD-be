@@ -34,9 +34,17 @@ public class GearServiceImpl implements GearService {
             throw new IllegalArgumentException("Invalid config type. Expected GEAR_CATEGORY.");
         }
 
+        GenericConfig gearType = configRepository.findById(gearReqDto.getTypeId())
+                .orElseThrow(() -> new EntityNotFoundException("Type not found"));
+
+        if (gearType.getType() != ConfigType.GEAR_TYPE) {
+            throw new IllegalArgumentException("Invalid config type. Expected GEAR_TYPE.");
+        }
+
         Gear gear = new Gear();
         gear.setName(gearReqDto.getName());
         gear.setCategory(category);
+        gear.setType(gearType);
 
         Gear saved = gearRepository.save(gear);
         return new GearResDto(saved);
@@ -67,6 +75,10 @@ public class GearServiceImpl implements GearService {
         var category = configRepository.findById(gearReqDto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + gearReqDto.getCategoryId()));
         gear.setCategory(category);
+
+        var gearType = configRepository.findById(gearReqDto.getTypeId())
+                .orElseThrow(() -> new IllegalArgumentException("Type not found with id: " + gearReqDto.getTypeId()));
+        gear.setType(gearType);
 
         gear = gearRepository.save(gear);
         return new GearResDto(gear);

@@ -53,4 +53,6 @@ public interface CompanyService {
      * @return the updated {@link CompanyDto}
      */
     CompanyDto updateEmployees(Long companyId, List<Integer> employeeIds);
+
+    CompanyDto updateInfo(CompanyDto companyDto);
 }

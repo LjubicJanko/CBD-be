@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,6 +35,18 @@ public class Company {
 
     private String name;
 
+    /** URL to the company logo */
+    private String logo;
+
+    /** Company website URL */
+    private String websiteUrl;
+
+    private String currency;
+
+    private String vat;
+
+    private List<String> colors;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "company_user",
@@ -52,5 +65,10 @@ public class Company {
 
     public Company(CompanyDto companyDto) {
         this.name = companyDto.getName();
+        this.logo = companyDto.getLogo();
+        this.websiteUrl = companyDto.getWebsiteUrl();
+        this.colors = companyDto.getColors();
+        this.currency = companyDto.getCurrency();
+        this.vat = companyDto.getVat();
     }
 }
