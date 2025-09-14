@@ -16,7 +16,6 @@ public class Gear {
 
     @Column(nullable = false)
     private String name;
-//    todo add type
 
     // Link to GenericConfig where type = GEAR_CATEGORY
     @ManyToOne(fetch = FetchType.EAGER)
