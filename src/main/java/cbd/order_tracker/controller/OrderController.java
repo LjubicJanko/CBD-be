@@ -70,9 +70,9 @@ public class OrderController {
 	public ResponseEntity<OrderTrackingDTO> trackOrder(@PathVariable String trackingId) {
 		try {
 			OrderTrackingDTO trackingDTO = orderService.getOrderByTrackingId(trackingId);
-			return ResponseEntity.ok(trackingDTO); // Return 200 OK with the order tracking data
+			return ResponseEntity.ok(trackingDTO);
 		} catch (OrderNotFoundException e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Return 404 with no body
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		}
 	}
 
