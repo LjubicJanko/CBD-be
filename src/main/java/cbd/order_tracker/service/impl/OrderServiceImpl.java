@@ -242,7 +242,9 @@ public class OrderServiceImpl implements OrderService {
 		}
 		var direction = "asc".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
 		var sortProp = "creation-date".equals(sortCriteria) ? "creationTime" : "plannedEndingDate";
-		Pageable pageRequest = PageRequest.of(page, perPage, Sort.by(direction, sortProp));
+		Pageable pageRequest = PageRequest.of(
+				page, perPage, Sort.by(direction, sortProp).and(Sort.by("id"))
+		);
 		Page<OrderOverviewDto> orderDtos = orderRepository.findOverviewBySearchAndFilters(
 				searchTerm, statuses, priorities, executionStatuses, pageRequest);
 
