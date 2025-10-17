@@ -1,6 +1,7 @@
 package cbd.order_tracker.model;
 
 public enum OrderStatus {
+    PENDING,
     DESIGN,
     PRINT_READY,
     PRINTING,
@@ -10,14 +11,14 @@ public enum OrderStatus {
     DONE;
 
     public OrderStatus next() {
-        switch (this) {
-            case DESIGN: return PRINT_READY;
-            case PRINT_READY: return PRINTING;
-            case PRINTING: return SEWING;
-            case SEWING: return SHIP_READY;
-            case SHIP_READY: return SHIPPED;
-            case SHIPPED: return DONE;
-            default: throw new IllegalStateException("No further transitions allowed from " + this);
-        }
+        return switch (this) {
+            case PENDING, DESIGN -> PRINT_READY;
+            case PRINT_READY -> PRINTING;
+            case PRINTING -> SEWING;
+            case SEWING -> SHIP_READY;
+            case SHIP_READY -> SHIPPED;
+            case SHIPPED -> DONE;
+            default -> throw new IllegalStateException("No further transitions allowed from " + this);
+        };
     }
 }

@@ -42,4 +42,7 @@ public class OrderDTO {
 
 	private String postalCode;
 	private String postalService;
+
+	private ContactInfo contactInfo;
+	private Boolean extension;
 }

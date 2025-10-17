@@ -38,7 +38,7 @@ public class SecurityConfiguration {
                 .csrf().disable()
                 .cors().and()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**", "/api/orders/track/**").permitAll()
+                .requestMatchers("/api/orderExtend/**", "/api/auth/**", "/api/orders/track/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement()

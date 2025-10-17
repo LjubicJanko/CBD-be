@@ -2,11 +2,16 @@ package cbd.order_tracker.service;
 
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
+import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
+import cbd.order_tracker.model.dto.response.OrderExtensionDto;
+
 import java.util.List;
 
 public interface OrderService {
 
     OrderDTO createOrder(OrderRecord order);
+
+    OrderExtensionDto createExtension(OrderExtensionReqDto order);
 
     OrderDTO updateOrder(OrderRecord order);
 

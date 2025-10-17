@@ -57,6 +57,7 @@ public class OrderMapper {
 		BigDecimal priceDifference = orderRecord.getSalePrice().subtract(orderRecord.getAcquisitionCost());
 		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
 		dto.setAmountLeftToPay(amountLefToPay);
+		dto.setExtension(orderRecord.getExtension());
 
 		if (isAdmin) {
 
@@ -64,6 +65,7 @@ public class OrderMapper {
 			dto.setSalePrice(orderRecord.getSalePrice());
 			dto.setSalePriceWithTax(orderRecord.getSalePriceWithTax());
 			dto.setPriceDifference(priceDifference);
+			dto.setContactInfo(orderRecord.getContactInfo());
 //			dto.setPayments(orderRecord.getPayments());
 		}
 
@@ -75,6 +77,6 @@ public class OrderMapper {
 	}
 
 	public static OrderTrackingDTO toOrderTrackingDTO(OrderRecord orderRecord) {
-		return new OrderTrackingDTO(orderRecord);
+        return new OrderTrackingDTO(orderRecord);
 	}
 }

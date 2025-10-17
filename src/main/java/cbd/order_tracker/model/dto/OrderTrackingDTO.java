@@ -1,13 +1,16 @@
 package cbd.order_tracker.model.dto;
 
+import cbd.order_tracker.model.ContactInfo;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatus;
 import cbd.order_tracker.model.OrderStatusHistory;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@Data
 public class OrderTrackingDTO {
 
 	private String name;
@@ -20,6 +23,8 @@ public class OrderTrackingDTO {
 	private BigDecimal amountLeftToPayWithTax;
 	private String postalCode;
 	private String postalService;
+	private boolean extension;
+	private ContactInfo contactInfo;
 
 	public OrderTrackingDTO() {
 	}
@@ -35,6 +40,8 @@ public class OrderTrackingDTO {
 		this.isLegalEntity = orderRecord.isLegalEntity();
 		this.amountLeftToPay = orderRecord.getSalePrice().subtract(orderRecord.getAmountPaid());
 		this.amountLeftToPayWithTax = orderRecord.getSalePriceWithTax().subtract(orderRecord.getAmountPaid());
+		this.extension = orderRecord.getExtension();
+		this.contactInfo = orderRecord.getContactInfo();
 		if (orderRecord.getStatus() == OrderStatus.SHIPPED) {
 			var history = orderRecord.getStatusHistory();
 			var lastStatusHistoryChange = history.get(history.size() - 1);
@@ -43,83 +50,4 @@ public class OrderTrackingDTO {
 		}
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public LocalDate getPlannedEndingDate() {
-		return plannedEndingDate;
-	}
-
-	public void setPlannedEndingDate(LocalDate plannedEndingDate) {
-		this.plannedEndingDate = plannedEndingDate;
-	}
-
-	public OrderStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(OrderStatus status) {
-		this.status = status;
-	}
-
-	public boolean isLegalEntity() {
-		return isLegalEntity;
-	}
-
-	public void setLegalEntity(boolean legalEntity) {
-		isLegalEntity = legalEntity;
-	}
-
-	public BigDecimal getAmountLeftToPay() {
-		return amountLeftToPay;
-	}
-
-	public void setAmountLeftToPay(BigDecimal amountLeftToPay) {
-		this.amountLeftToPay = amountLeftToPay;
-	}
-
-	public BigDecimal getAmountLeftToPayWithTax() {
-		return amountLeftToPayWithTax;
-	}
-
-	public void setAmountLeftToPayWithTax(BigDecimal amountLeftToPayWithTax) {
-		this.amountLeftToPayWithTax = amountLeftToPayWithTax;
-	}
-
-	public String getPostalCode() {
-		return postalCode;
-	}
-
-	public void setPostalCode(String postalCode) {
-		this.postalCode = postalCode;
-	}
-
-	public String getPostalService() {
-		return postalService;
-	}
-
-	public void setPostalService(String postalService) {
-		this.postalService = postalService;
-	}
-
-	public String getLastUpdatedDate() {
-		return lastUpdatedDate;
-	}
-
-	public void setLastUpdatedDate(String lastUpdatedDate) {
-		this.lastUpdatedDate = lastUpdatedDate;
-	}
 }

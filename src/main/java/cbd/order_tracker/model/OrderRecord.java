@@ -1,7 +1,9 @@
 package cbd.order_tracker.model;
 
 import cbd.order_tracker.model.dto.PaymentRequestDto;
+import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Data
 @Entity
 @SQLRestriction("deleted = false")
 public class OrderRecord {
@@ -59,6 +62,7 @@ public class OrderRecord {
 	private String postalService;
 
 	@Enumerated(EnumType.STRING)
+	@Column(length = 32)
 	private OrderStatus status;
 
 	@Column(length = 32, columnDefinition = "varchar(32) default 'MEDIUM'")
@@ -74,15 +78,48 @@ public class OrderRecord {
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Payment> payments;
 
+	private ContactInfo contactInfo;
+
+	@Column(name = "extension", nullable = false)
+	private Boolean extension = false;
+
 	public OrderRecord() {
 	}
 
+	public OrderRecord(OrderExtensionReqDto extensionReqDto) {
+		this.name = extensionReqDto.getName();
+		this.description = extensionReqDto.getDescription();
+		this.contactInfo = extensionReqDto.getContactInfo();
+		this.trackingId = UUID.randomUUID().toString().substring(0, 8);
+		this.creationTime = LocalDateTime.now();
+
+//		default values
+		this.executionStatus = OrderExecutionStatus.ACTIVE;
+		this.status = OrderStatus.PENDING;
+		this.acquisitionCost = BigDecimal.ZERO;
+		this.statusHistory = new ArrayList<>();
+		this.payments = new ArrayList<>();
+		this.extension = true;
+		this.amountPaid = BigDecimal.ZERO;
+		this.salePrice = BigDecimal.ZERO;
+		this.salePriceWithTax = BigDecimal.ZERO;
+		this.amountLeftToPay = BigDecimal.ZERO;
+		this.amountLeftToPayWithTax = BigDecimal.ZERO;
+		this.priority = OrderPriority.MEDIUM;
+		this.dateWhenMovedToDone = null;
+		this.postalCode = null;
+		this.postalService = null;
+
+		addStatusHistory(status, null, null);
+	}
+
+	//	todo: check this copy constructor
 	public OrderRecord(OrderRecord order) {
 		this.name = order.getName();
 		this.description = order.getDescription();
 		this.note = order.getNote();
 		this.plannedEndingDate = order.getPlannedEndingDate();
-		this.trackingId = UUID.randomUUID().toString();
+		this.trackingId = UUID.randomUUID().toString().substring(0, 8);
 		this.legalEntity = order.isLegalEntity();
 		this.acquisitionCost = order.getAcquisitionCost();
 		this.salePrice = order.getSalePrice();
@@ -128,204 +165,4 @@ public class OrderRecord {
 	}
 
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public boolean isDeleted() {
-		return deleted;
-	}
-
-	public void setDeleted(boolean deleted) {
-		this.deleted = deleted;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public String getNote() {
-		return note;
-	}
-
-	public void setNote(String note) {
-		this.note = note;
-	}
-
-	public LocalDate getPlannedEndingDate() {
-		return plannedEndingDate;
-	}
-
-	public void setPlannedEndingDate(LocalDate plannedEndingDate) {
-		this.plannedEndingDate = plannedEndingDate;
-	}
-
-	public String getTrackingId() {
-		return trackingId;
-	}
-
-	public String getPausingComment() {
-		return pausingComment;
-	}
-
-	public void setPausingComment(String pausingComment) {
-		this.pausingComment = pausingComment;
-	}
-
-	public void setTrackingId(String trackingId) {
-		this.trackingId = trackingId;
-	}
-
-	public boolean isLegalEntity() {
-		return legalEntity;
-	}
-
-	public void setLegalEntity(boolean legalEntity) {
-		this.legalEntity = legalEntity;
-	}
-
-	public BigDecimal getAcquisitionCost() {
-		return acquisitionCost;
-	}
-
-	public void setAcquisitionCost(BigDecimal acquisitionCost) {
-		this.acquisitionCost = acquisitionCost;
-	}
-
-	public BigDecimal getSalePrice() {
-		return salePrice;
-	}
-
-	public void setSalePrice(BigDecimal salePrice) {
-		this.salePrice = salePrice;
-	}
-
-	public BigDecimal getSalePriceWithTax() {
-		return salePriceWithTax;
-	}
-
-	public void setSalePriceWithTax(BigDecimal salePriceWithTax) {
-		this.salePriceWithTax = salePriceWithTax;
-	}
-
-	public BigDecimal getPriceDifference() {
-		return priceDifference;
-	}
-
-	public void setPriceDifference(BigDecimal priceDifference) {
-		this.priceDifference = priceDifference;
-	}
-
-	public BigDecimal getAmountPaid() {
-		return amountPaid;
-	}
-
-	public void setAmountPaid(BigDecimal amountPaid) {
-		this.amountPaid = amountPaid;
-	}
-
-	public BigDecimal getAmountLeftToPay() {
-		return amountLeftToPay;
-	}
-
-	public void setAmountLeftToPay(BigDecimal amountLeftToPay) {
-		this.amountLeftToPay = amountLeftToPay;
-	}
-
-	public BigDecimal getAmountLeftToPayWithTax() {
-		return amountLeftToPayWithTax;
-	}
-
-	public void setAmountLeftToPayWithTax(BigDecimal amountLeftToPayWithTax) {
-		this.amountLeftToPayWithTax = amountLeftToPayWithTax;
-	}
-
-	public LocalDateTime getCreationTime() {
-		return creationTime;
-	}
-
-	public void setCreationTime(LocalDateTime creationTime) {
-		this.creationTime = creationTime;
-	}
-
-	public OrderStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(OrderStatus status) {
-		this.status = status;
-	}
-
-	public OrderExecutionStatus getExecutionStatus() {
-		return executionStatus;
-	}
-
-	public void setExecutionStatus(OrderExecutionStatus executionStatus) {
-		this.executionStatus = executionStatus;
-	}
-
-	public List<OrderStatusHistory> getStatusHistory() {
-		return statusHistory;
-	}
-
-	public void setStatusHistory(List<OrderStatusHistory> statusHistory) {
-		this.statusHistory = statusHistory;
-	}
-
-	public List<Payment> getPayments() {
-		return payments;
-	}
-
-	public void setPayments(List<Payment> payments) {
-		this.payments = payments;
-	}
-
-	public OrderPriority getPriority() {
-		return priority;
-	}
-
-	public void setPriority(OrderPriority priority) {
-		this.priority = priority;
-	}
-
-
-	public LocalDateTime getDateWhenMovedToDone() {
-		return dateWhenMovedToDone;
-	}
-
-	public void setDateWhenMovedToDone(LocalDateTime dateWhenMovedToDone) {
-		this.dateWhenMovedToDone = dateWhenMovedToDone;
-	}
-
-	public String getPostalCode() {
-		return postalCode;
-	}
-
-	public void setPostalCode(String postalCode) {
-		this.postalCode = postalCode;
-	}
-
-	public String getPostalService() {
-		return postalService;
-	}
-
-	public void setPostalService(String postalService) {
-		this.postalService = postalService;
-	}
 }

@@ -3,8 +3,11 @@ package cbd.order_tracker.service.impl;
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
+import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
+import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 import cbd.order_tracker.repository.*;
 import cbd.order_tracker.service.OrderService;
+import cbd.order_tracker.util.OrderExtensionMapper;
 import cbd.order_tracker.util.OrderMapper;
 import cbd.order_tracker.util.PaymentMapper;
 import cbd.order_tracker.util.UserUtil;
@@ -44,6 +47,13 @@ public class OrderServiceImpl implements OrderService {
 				.orElseThrow(() -> new RuntimeException("User not found"));
 
 		return OrderMapper.toDto(orderRecord, new ArrayList<>(), user.getRoles());
+	}
+
+	@Override
+	public OrderExtensionDto createExtension(OrderExtensionReqDto orderExtensionReqDto) {
+		OrderRecord newOrder = new OrderRecord(orderExtensionReqDto);
+		OrderRecord orderRecord = orderRepository.save(newOrder);
+		return OrderExtensionMapper.toDto(orderRecord);
 	}
 
 	@Override
@@ -278,7 +288,7 @@ public class OrderServiceImpl implements OrderService {
 				.orElseThrow(() -> new OrderNotFoundException("Order with tracking ID '" + trackingId + "' not found"));
 		List<OrderStatusHistory> history = getOrderStatusHistory(orderRecord.getId());
 		orderRecord.setStatusHistory(history);
-		return OrderMapper.toOrderTrackingDTO(orderRecord);
+        return OrderMapper.toOrderTrackingDTO(orderRecord);
 	}
 
 	@Override
