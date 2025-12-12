@@ -1,6 +1,8 @@
 package cbd.order_tracker.model;
 
 import cbd.order_tracker.model.dto.PaymentRequestDto;
+import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
+import cbd.order_tracker.util.CommonHelper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import jakarta.persistence.*;
@@ -92,9 +94,6 @@ public class OrderRecord {
 	@Column(name = "extension", nullable = false)
 	private Boolean extension = false;
 
-	public OrderRecord() {
-	}
-
 	public OrderRecord(OrderExtensionReqDto extensionReqDto) {
 		this.name = extensionReqDto.getName();
 		this.description = extensionReqDto.getDescription();
@@ -124,6 +123,7 @@ public class OrderRecord {
 
 	//	todo: check this copy constructor
 	public OrderRecord(OrderRecord order) {
+		this.id = order.getId();
 		this.name = order.getName();
 		this.description = order.getDescription();
 		this.note = order.getNote();
@@ -132,8 +132,11 @@ public class OrderRecord {
 		this.legalEntity = order.isLegalEntity();
 		this.acquisitionCost = order.getAcquisitionCost();
 		this.salePrice = order.getSalePrice();
+//		todo: change this hardcoded tax
 		this.salePriceWithTax = order.getSalePrice().multiply(BigDecimal.valueOf(1.2));
-		this.priceDifference = order.getSalePrice().subtract(acquisitionCost);
+//		this.priceDifference = order.getSalePrice().subtract(acquisitionCost);
+		this.priceDifference = CommonHelper.safeSubtract(order.getSalePrice(), order.getAcquisitionCost());
+
 		this.amountPaid = BigDecimal.ZERO;
 		this.amountLeftToPay = order.getSalePrice();
 		this.amountLeftToPayWithTax = salePriceWithTax;
@@ -146,6 +149,12 @@ public class OrderRecord {
 		this.dateWhenMovedToDone = null;
 		this.postalCode = null;
 		this.postalService = null;
+		this.pausingComment = null;
+		this.deleted = false;
+		this.company = order.getCompany();
+		this.contactInfo = order.getContactInfo();
+		this.extension = false;
+
 		addStatusHistory(status, null, null);
 	}
 

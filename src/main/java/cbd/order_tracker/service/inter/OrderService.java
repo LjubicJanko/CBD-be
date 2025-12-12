@@ -2,6 +2,8 @@ package cbd.order_tracker.service.inter;
 
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
+import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
+import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 
 import java.util.List;
 
@@ -218,4 +220,6 @@ public interface OrderService {
      * @return list of {@link OrderStatusHistoryDTO}
      */
     List<OrderStatusHistoryDTO> getHistory(Long orderId);
+
+    OrderExtensionDto createExtension(OrderExtensionReqDto orderExtensionReqDto);
 }

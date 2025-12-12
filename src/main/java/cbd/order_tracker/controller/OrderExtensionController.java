@@ -3,7 +3,7 @@ package cbd.order_tracker.controller;
 import cbd.order_tracker.model.ContactInfo;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
-import cbd.order_tracker.service.OrderService;
+import cbd.order_tracker.service.inter.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

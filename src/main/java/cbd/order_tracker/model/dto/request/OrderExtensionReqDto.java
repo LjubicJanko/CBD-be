@@ -8,4 +8,5 @@ public class OrderExtensionReqDto {
     private String name;
     private String description;
     private ContactInfo contactInfo;
+    private String companyName;
 }

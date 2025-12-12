@@ -2,12 +2,12 @@ package cbd.order_tracker.service.impl;
 
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
+import cbd.order_tracker.model.company.Company;
 import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 import cbd.order_tracker.repository.*;
 import cbd.order_tracker.service.inter.OrderService;
-import cbd.order_tracker.service.OrderService;
 import cbd.order_tracker.util.OrderExtensionMapper;
 import cbd.order_tracker.util.OrderMapper;
 import cbd.order_tracker.util.PaymentMapper;
@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -70,8 +71,20 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public OrderExtensionDto createExtension(OrderExtensionReqDto orderExtensionReqDto) {
+		// Create the new order from the DTO
 		OrderRecord newOrder = new OrderRecord(orderExtensionReqDto);
+
+		// Try to find the requested company
+		Company company = companyRepository.findByName(orderExtensionReqDto.getCompanyName())
+				// If not found, try to find the default "CBD" company
+				.or(() -> companyRepository.findByName("CBD"))
+				// If that also doesn’t exist, throw an exception
+				.orElseThrow(() -> new EntityNotFoundException("Neither company '"
+						+ orderExtensionReqDto.getCompanyName() + "' nor default 'CBD' found."));
+
+		newOrder.setCompany(company);
 		OrderRecord orderRecord = orderRepository.save(newOrder);
+
 		return OrderExtensionMapper.toDto(orderRecord);
 	}
 
