@@ -55,4 +55,6 @@ public interface OrderService {
     List<Payment> getPayments(Long orderId);
 
     List<OrderStatusHistoryDTO> getHistory(Long orderId);
+
+    OrderExtensionDto editContactInfo(Long id, ContactInfo contactInfo);
 }

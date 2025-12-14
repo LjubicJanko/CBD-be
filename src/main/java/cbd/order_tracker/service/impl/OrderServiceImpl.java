@@ -163,7 +163,6 @@ public class OrderServiceImpl implements OrderService {
 		payment.setOrder(orderRecord);
 		orderRecord.addPayment(payment);
 		orderRecord = orderRepository.save(orderRecord);
-		System.out.println(orderRecord);
 
 		List<PaymentDto> payments = orderRecord.getPayments().stream().map(PaymentMapper::toDto).toList();
 
@@ -331,5 +330,14 @@ public class OrderServiceImpl implements OrderService {
 		var history = statusHistoryRepository.findByOrderId(orderId);
 
 		return OrderMapper.mapStatusHistory(history);
+	}
+
+	@Override
+	public OrderExtensionDto editContactInfo(Long id, ContactInfo contactInfo) {
+		OrderRecord orderRecord = orderRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Order not found"));
+		orderRecord.setContactInfo(contactInfo);
+		orderRecord = orderRepository.save(orderRecord);
+		return OrderExtensionMapper.toDto(orderRecord);
 	}
 }
