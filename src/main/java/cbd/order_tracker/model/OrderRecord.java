@@ -1,14 +1,13 @@
 package cbd.order_tracker.model;
 
+import cbd.order_tracker.model.company.Company;
 import cbd.order_tracker.model.dto.PaymentRequestDto;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.util.CommonHelper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Data;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;

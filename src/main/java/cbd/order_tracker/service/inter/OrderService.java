@@ -222,4 +222,5 @@ public interface OrderService {
     List<OrderStatusHistoryDTO> getHistory(Long orderId);
 
     OrderExtensionDto createExtension(OrderExtensionReqDto orderExtensionReqDto);
+    OrderExtensionDto editContactInfo(Long id, ContactInfo contactInfo);
 }
