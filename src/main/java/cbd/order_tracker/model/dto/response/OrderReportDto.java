@@ -9,6 +9,8 @@ public class OrderReportDto {
 
     // visible to all roles
     private Long orderCount;
+    private Long extensionOrderCount;
+    private Long regularOrderCount;
     private BigDecimal totalAcquisitionCost;
     private BigDecimal averageAcquisitionCost;
 

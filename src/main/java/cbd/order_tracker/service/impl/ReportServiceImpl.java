@@ -41,6 +41,8 @@ public class ReportServiceImpl implements ReportService {
         dto.setOrderCount(((Number) result[0]).longValue());
         dto.setTotalAcquisitionCost(new BigDecimal(result[1].toString()));
         dto.setAverageAcquisitionCost(new BigDecimal(result[2].toString()));
+        dto.setExtensionOrderCount(((Number) result[6]).longValue());
+        dto.setRegularOrderCount(((Number) result[7]).longValue());
 
         if (isAdmin) {
             dto.setTotalAmountPaid(new BigDecimal(result[3].toString()));

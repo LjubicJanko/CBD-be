@@ -56,7 +56,9 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 			"COALESCE(AVG(o.acquisitionCost), 0), " +
 			"COALESCE(SUM(o.amountPaid), 0), " +
 			"COALESCE(SUM(o.salePrice), 0), " +
-			"COALESCE(SUM(o.amountLeftToPay), 0) " +
+			"COALESCE(SUM(o.amountLeftToPay), 0), " +
+			"SUM(CASE WHEN o.extension = true THEN 1 ELSE 0 END), " +
+			"SUM(CASE WHEN o.extension = false THEN 1 ELSE 0 END) " +
 			"FROM OrderRecord o " +
 			"WHERE o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED " +
 			"AND (:from IS NULL OR o.creationTime >= :from) " +
