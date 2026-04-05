@@ -156,6 +156,10 @@ public class OrderRecord {
 		statusHistory.add(new OrderStatusHistory(this, newStatus, postalCode, postalService));
 	}
 
+	public void addExecutionStatusHistory(OrderExecutionStatus executionStatus, String comment) {
+		statusHistory.add(new OrderStatusHistory(this, executionStatus, comment));
+	}
+
 	public void addPayment(PaymentRequestDto payment) {
 		Payment newPayment = new Payment(this, payment);
 		this.payments.add(newPayment);

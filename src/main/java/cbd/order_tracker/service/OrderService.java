@@ -2,6 +2,7 @@ package cbd.order_tracker.service;
 
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
+import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 
@@ -57,4 +58,6 @@ public interface OrderService {
     List<OrderStatusHistoryDTO> getHistory(Long orderId);
 
     OrderExtensionDto editContactInfo(Long id, ContactInfo contactInfo);
+
+    OrderDTO editShipmentInfo(Long id, EditShipmentInfoDto dto);
 }

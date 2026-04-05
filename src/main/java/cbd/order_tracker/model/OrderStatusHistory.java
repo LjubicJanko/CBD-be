@@ -23,6 +23,9 @@ public class OrderStatusHistory {
 	@Enumerated(EnumType.STRING)
 	private OrderStatus status;
 
+	@Enumerated(EnumType.STRING)
+	private OrderExecutionStatus executionStatus;
+
 	private LocalDateTime creationTime;
 	private String user;
 
@@ -40,6 +43,14 @@ public class OrderStatusHistory {
 		this.creationTime = LocalDateTime.now();
 		this.postalCode = postalCode;
 		this.postalService = postalService;
+	}
+
+	public OrderStatusHistory(OrderRecord order, OrderExecutionStatus executionStatus, String comment) {
+		this.user = UserUtil.getCurrentUserName();
+		this.order = order;
+		this.executionStatus = executionStatus;
+		this.closingComment = comment;
+		this.creationTime = LocalDateTime.now();
 	}
 
 	public Long getId() {
@@ -81,6 +92,14 @@ public class OrderStatusHistory {
 
 	public void setUser(String user) {
 		this.user = user;
+	}
+
+	public OrderExecutionStatus getExecutionStatus() {
+		return executionStatus;
+	}
+
+	public void setExecutionStatus(OrderExecutionStatus executionStatus) {
+		this.executionStatus = executionStatus;
 	}
 
 	public String getClosingComment() {

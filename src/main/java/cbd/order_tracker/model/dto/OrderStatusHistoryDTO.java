@@ -1,5 +1,6 @@
 package cbd.order_tracker.model.dto;
 
+import cbd.order_tracker.model.OrderExecutionStatus;
 import cbd.order_tracker.model.OrderStatus;
 
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ public class OrderStatusHistoryDTO {
 
     private Long id;
     private OrderStatus status;
+    private OrderExecutionStatus executionStatus;
     private String closingComment;
     private LocalDateTime creationTime;
     private String user; // can be full name, or username
@@ -28,6 +30,14 @@ public class OrderStatusHistoryDTO {
 
     public void setStatus(OrderStatus status) {
         this.status = status;
+    }
+
+    public OrderExecutionStatus getExecutionStatus() {
+        return executionStatus;
+    }
+
+    public void setExecutionStatus(OrderExecutionStatus executionStatus) {
+        this.executionStatus = executionStatus;
     }
 
     public String getClosingComment() {

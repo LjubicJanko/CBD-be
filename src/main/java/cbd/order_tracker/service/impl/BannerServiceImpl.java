@@ -52,7 +52,7 @@ public class BannerServiceImpl implements BannerService {
         List<BannerPlacement> placements = placementRepository.findAllByActiveTrueWithBanner();
 
         if (placements.isEmpty()) {
-            throw new RuntimeException("No active banner found");
+            return null;
         }
 
         // Assume only one banner can be active at a time

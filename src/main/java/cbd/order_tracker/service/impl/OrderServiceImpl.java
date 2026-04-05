@@ -3,6 +3,7 @@ package cbd.order_tracker.service.impl;
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
+import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 import cbd.order_tracker.repository.*;
@@ -79,12 +80,14 @@ public class OrderServiceImpl implements OrderService {
 		return OrderMapper.toDto(orderRepository.save(orderRecord), history, user.getRoles());
 	}
 
+	@Transactional
 	@Override
 	public OrderDTO changeExecutionStatus(Long id, OrderExecutionStatus executionStatus, String note) {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 		orderRecord.setExecutionStatus(executionStatus);
 		orderRecord.setPausingComment(note);
+		orderRecord.addExecutionStatusHistory(executionStatus, note);
 		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
@@ -102,6 +105,7 @@ public class OrderServiceImpl implements OrderService {
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 		orderRecord.setExecutionStatus(OrderExecutionStatus.PAUSED);
 		orderRecord.setPausingComment(pausingComment);
+		orderRecord.addExecutionStatusHistory(OrderExecutionStatus.PAUSED, pausingComment);
 		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
@@ -118,6 +122,7 @@ public class OrderServiceImpl implements OrderService {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));
 		orderRecord.setExecutionStatus(OrderExecutionStatus.ACTIVE);
+		orderRecord.addExecutionStatusHistory(OrderExecutionStatus.ACTIVE, null);
 		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
@@ -339,5 +344,46 @@ public class OrderServiceImpl implements OrderService {
 		orderRecord.setContactInfo(contactInfo);
 		orderRecord = orderRepository.save(orderRecord);
 		return OrderExtensionMapper.toDto(orderRecord);
+	}
+
+	@Transactional
+	@Override
+	public OrderDTO editShipmentInfo(Long id, EditShipmentInfoDto dto) {
+		OrderRecord orderRecord = orderRepository.findById(id)
+				.orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
+
+		if (orderRecord.getStatus() != OrderStatus.SHIPPED) {
+			throw new IllegalStateException("Order must be in SHIPPED status to edit shipment info");
+		}
+
+		java.util.Set<String> validServices = java.util.Set.of("d", "city", "aks", "post", "bex");
+		if (dto.getPostalService() == null || !validServices.contains(dto.getPostalService())) {
+			throw new IllegalArgumentException("postalService must be one of: d, city, aks, post, bex");
+		}
+		if (dto.getPostalCode() == null || dto.getPostalCode().isBlank()) {
+			throw new IllegalArgumentException("postalCode must not be empty");
+		}
+
+		orderRecord.setPostalService(dto.getPostalService());
+		orderRecord.setPostalCode(dto.getPostalCode());
+
+		// Update the SHIPPED status history entry as well
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		history.stream()
+				.filter(h -> h.getStatus() == OrderStatus.SHIPPED)
+				.findFirst()
+				.ifPresent(h -> {
+					h.setPostalService(dto.getPostalService());
+					h.setPostalCode(dto.getPostalCode());
+				});
+
+		orderRepository.save(orderRecord);
+
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = auth.getName();
+		User user = userRepository.findByUsernameWithRoles(username)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		return OrderMapper.toDto(orderRecord, history, user.getRoles());
 	}
 }

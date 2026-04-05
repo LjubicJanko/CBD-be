@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,5 +44,23 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 			@Param("executionStatuses") List<OrderExecutionStatus> executionStatuses,
 			Pageable pageable
 	);
+
+	@Query("SELECT o FROM OrderRecord o WHERE o.status = cbd.order_tracker.model.OrderStatus.DONE " +
+			"AND o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED " +
+			"AND (:from IS NULL OR o.creationTime >= :from) " +
+			"AND (:to IS NULL OR o.creationTime <= :to)")
+	List<OrderRecord> findCompletedOrders(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+	@Query("SELECT COUNT(o), " +
+			"COALESCE(SUM(o.acquisitionCost), 0), " +
+			"COALESCE(AVG(o.acquisitionCost), 0), " +
+			"COALESCE(SUM(o.amountPaid), 0), " +
+			"COALESCE(SUM(o.salePrice), 0), " +
+			"COALESCE(SUM(o.amountLeftToPay), 0) " +
+			"FROM OrderRecord o " +
+			"WHERE o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED " +
+			"AND (:from IS NULL OR o.creationTime >= :from) " +
+			"AND (:to IS NULL OR o.creationTime <= :to)")
+	Object[] getOrderReport(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
 }

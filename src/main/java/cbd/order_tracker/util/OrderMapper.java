@@ -20,6 +20,7 @@ public class OrderMapper {
 					OrderStatusHistoryDTO hDto = new OrderStatusHistoryDTO();
 					hDto.setId(h.getId());
 					hDto.setStatus(h.getStatus());
+					hDto.setExecutionStatus(h.getExecutionStatus());
 					hDto.setClosingComment(h.getClosingComment());
 					hDto.setCreationTime(h.getCreationTime());
 					hDto.setPostalCode(h.getPostalCode());

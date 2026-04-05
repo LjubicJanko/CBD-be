@@ -3,9 +3,11 @@ package cbd.order_tracker.controller;
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
+import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
 import cbd.order_tracker.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -125,6 +127,12 @@ public class OrderController {
 	@PutMapping("/deletePayment/{id}")
 	public ResponseEntity<UpdatePaymentsResponse> deletePayment(@PathVariable Long id, @RequestParam Long paymentId) {
 		return new ResponseEntity<>(orderService.deletePayment(id, paymentId), HttpStatus.OK);
+	}
+
+	@PreAuthorize("hasAuthority('order-info-edit')")
+	@PutMapping("/editShipmentInfo/{id}")
+	public ResponseEntity<OrderDTO> editShipmentInfo(@PathVariable Long id, @RequestBody EditShipmentInfoDto dto) {
+		return new ResponseEntity<>(orderService.editShipmentInfo(id, dto), HttpStatus.OK);
 	}
 
 	@DeleteMapping("/delete/{id}")

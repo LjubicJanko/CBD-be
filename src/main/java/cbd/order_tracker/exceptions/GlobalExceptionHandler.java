@@ -20,6 +20,20 @@ public class GlobalExceptionHandler {
 		return errorDetail;
 	}
 
+	@ExceptionHandler(IllegalStateException.class)
+	public ProblemDetail handleIllegalStateException(IllegalStateException exception) {
+		ProblemDetail errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(400), exception.getMessage());
+		errorDetail.setProperty("description", exception.getMessage());
+		return errorDetail;
+	}
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ProblemDetail handleIllegalArgumentException(IllegalArgumentException exception) {
+		ProblemDetail errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(400), exception.getMessage());
+		errorDetail.setProperty("description", exception.getMessage());
+		return errorDetail;
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ProblemDetail handleSecurityException(Exception exception) {
 		ProblemDetail errorDetail = null;
