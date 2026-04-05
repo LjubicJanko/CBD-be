@@ -21,6 +21,9 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 	@Query("SELECT o FROM OrderRecord o WHERE o.trackingId = :trackingId AND o.deleted = false")
 	Optional<OrderRecord> findByTrackingId(String trackingId);
 
+	@Query("SELECT o FROM OrderRecord o JOIN o.aliasIds a WHERE a = :aliasId AND o.deleted = false")
+	Optional<OrderRecord> findByAliasId(@Param("aliasId") String aliasId);
+
 	@Query("SELECT o FROM OrderRecord o WHERE o.status IN :statuses AND o.deleted = false")
 	List<OrderRecord> findByStatusIn(List<OrderStatus> statuses);
 

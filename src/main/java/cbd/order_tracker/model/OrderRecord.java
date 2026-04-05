@@ -83,6 +83,11 @@ public class OrderRecord {
 	@Column(name = "extension", nullable = false)
 	private Boolean extension = false;
 
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "order_alias_ids", joinColumns = @JoinColumn(name = "order_id"))
+	@Column(name = "alias_id")
+	private List<String> aliasIds = new ArrayList<>();
+
 	public OrderRecord() {
 	}
 

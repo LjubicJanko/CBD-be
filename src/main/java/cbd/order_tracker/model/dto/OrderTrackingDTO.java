@@ -25,6 +25,7 @@ public class OrderTrackingDTO {
 	private String postalService;
 	private boolean extension;
 	private ContactInfo contactInfo;
+	private List<String> aliasIds;
 
 	public OrderTrackingDTO() {
 	}
@@ -42,6 +43,7 @@ public class OrderTrackingDTO {
 		this.amountLeftToPayWithTax = orderRecord.getSalePriceWithTax().subtract(orderRecord.getAmountPaid());
 		this.extension = orderRecord.getExtension();
 		this.contactInfo = orderRecord.getContactInfo();
+		this.aliasIds = orderRecord.getAliasIds();
 		if (orderRecord.getStatus() == OrderStatus.SHIPPED) {
 			var history = orderRecord.getStatusHistory();
 			var lastStatusHistoryChange = history.get(history.size() - 1);

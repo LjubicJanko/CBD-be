@@ -17,6 +17,7 @@ public class OrderExtensionMapper {
         dto.setTrackingId(orderRecord.getTrackingId());
         dto.setExtension(orderRecord.getExtension());
         dto.setContactInfo(orderRecord.getContactInfo());
+        dto.setAliasIds(orderRecord.getAliasIds());
         return dto;
     }
 }

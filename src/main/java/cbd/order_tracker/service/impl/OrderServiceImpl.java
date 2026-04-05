@@ -3,6 +3,7 @@ package cbd.order_tracker.service.impl;
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
+import cbd.order_tracker.model.dto.request.CombineExtensionsReqDto;
 import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
@@ -289,6 +290,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public OrderTrackingDTO getOrderByTrackingId(String trackingId) {
 		OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId)
+				.or(() -> orderRepository.findByAliasId(trackingId))
 				.orElseThrow(() -> new OrderNotFoundException("Order with tracking ID '" + trackingId + "' not found"));
 		List<OrderStatusHistory> history = getOrderStatusHistory(orderRecord.getId());
 		orderRecord.setStatusHistory(history);
@@ -385,5 +387,48 @@ public class OrderServiceImpl implements OrderService {
 				.orElseThrow(() -> new RuntimeException("User not found"));
 
 		return OrderMapper.toDto(orderRecord, history, user.getRoles());
+	}
+
+	@Transactional
+	@Override
+	public OrderExtensionDto combineExtensions(CombineExtensionsReqDto dto) {
+		List<Long> ids = dto.getExtensionIds();
+		if (ids == null || ids.size() < 2) {
+			throw new IllegalArgumentException("At least 2 extension IDs are required");
+		}
+
+		Long mainId = ids.get(0);
+		OrderRecord mainOrder = orderRepository.findById(mainId)
+				.orElseThrow(() -> new OrderNotFoundException("Extension not found with id: " + mainId));
+
+		if (!Boolean.TRUE.equals(mainOrder.getExtension())) {
+			throw new IllegalArgumentException("Order with id " + mainId + " is not an extension");
+		}
+
+		List<String> aliasIds = new ArrayList<>(mainOrder.getAliasIds());
+
+		for (int i = 1; i < ids.size(); i++) {
+			Long otherId = ids.get(i);
+			OrderRecord otherOrder = orderRepository.findById(otherId)
+					.orElseThrow(() -> new OrderNotFoundException("Extension not found with id: " + otherId));
+
+			if (!Boolean.TRUE.equals(otherOrder.getExtension())) {
+				throw new IllegalArgumentException("Order with id " + otherId + " is not an extension");
+			}
+
+			aliasIds.add(otherOrder.getTrackingId());
+			aliasIds.addAll(otherOrder.getAliasIds());
+
+			otherOrder.setDeleted(true);
+			orderRepository.save(otherOrder);
+		}
+
+		mainOrder.setName(dto.getName());
+		mainOrder.setDescription(dto.getDescription());
+		mainOrder.setContactInfo(dto.getContactInfo());
+		mainOrder.setAliasIds(aliasIds);
+
+		orderRepository.save(mainOrder);
+		return OrderExtensionMapper.toDto(mainOrder);
 	}
 }

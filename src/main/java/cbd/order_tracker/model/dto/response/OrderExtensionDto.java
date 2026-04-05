@@ -18,4 +18,5 @@ public class OrderExtensionDto {
     private List<Payment> payments;
     private ContactInfo contactInfo;
     private Boolean extension;
+    private List<String> aliasIds;
 }

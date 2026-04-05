@@ -3,7 +3,9 @@ package cbd.order_tracker.controller;
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
+import cbd.order_tracker.model.dto.request.CombineExtensionsReqDto;
 import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
+import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 import cbd.order_tracker.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -133,6 +135,11 @@ public class OrderController {
 	@PutMapping("/editShipmentInfo/{id}")
 	public ResponseEntity<OrderDTO> editShipmentInfo(@PathVariable Long id, @RequestBody EditShipmentInfoDto dto) {
 		return new ResponseEntity<>(orderService.editShipmentInfo(id, dto), HttpStatus.OK);
+	}
+
+	@PostMapping("/combineExtensions")
+	public ResponseEntity<OrderExtensionDto> combineExtensions(@RequestBody CombineExtensionsReqDto dto) {
+		return new ResponseEntity<>(orderService.combineExtensions(dto), HttpStatus.OK);
 	}
 
 	@DeleteMapping("/delete/{id}")
