@@ -50,8 +50,8 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 
 	@Query("SELECT o FROM OrderRecord o WHERE o.status = cbd.order_tracker.model.OrderStatus.DONE " +
 			"AND o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED " +
-			"AND (:from IS NULL OR o.creationTime >= :from) " +
-			"AND (:to IS NULL OR o.creationTime <= :to)")
+			"AND (:from IS NULL OR o.dateWhenMovedToDone >= :from) " +
+			"AND (:to IS NULL OR o.dateWhenMovedToDone <= :to)")
 	List<OrderRecord> findCompletedOrders(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
 	@Query("SELECT COUNT(o), " +
@@ -60,12 +60,12 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 			"COALESCE(SUM(o.amountPaid), 0), " +
 			"COALESCE(SUM(o.salePrice), 0), " +
 			"COALESCE(SUM(o.amountLeftToPay), 0), " +
-			"SUM(CASE WHEN o.extension = true THEN 1 ELSE 0 END), " +
-			"SUM(CASE WHEN o.extension = false THEN 1 ELSE 0 END) " +
+			"COALESCE(SUM(CASE WHEN o.extension = true THEN 1 ELSE 0 END), 0), " +
+			"COALESCE(SUM(CASE WHEN o.extension = false THEN 1 ELSE 0 END), 0) " +
 			"FROM OrderRecord o " +
 			"WHERE o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED " +
-			"AND (:from IS NULL OR o.creationTime >= :from) " +
-			"AND (:to IS NULL OR o.creationTime <= :to)")
+			"AND (:from IS NULL OR o.dateWhenMovedToDone >= :from) " +
+			"AND (:to IS NULL OR o.dateWhenMovedToDone <= :to)")
 	Object[] getOrderReport(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
 }
