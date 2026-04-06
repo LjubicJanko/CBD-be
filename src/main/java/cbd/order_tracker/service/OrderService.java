@@ -60,6 +60,8 @@ public interface OrderService {
 
     OrderExtensionDto editContactInfo(Long id, ContactInfo contactInfo);
 
+    OrderExtensionDto editExtension(String trackingId, OrderExtensionReqDto dto);
+
     OrderDTO editShipmentInfo(Long id, EditShipmentInfoDto dto);
 
     OrderExtensionDto combineExtensions(CombineExtensionsReqDto dto);

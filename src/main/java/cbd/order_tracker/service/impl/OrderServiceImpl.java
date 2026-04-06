@@ -340,6 +340,49 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	public OrderExtensionDto editExtension(String trackingId, OrderExtensionReqDto dto) {
+		validateExtensionRequest(dto);
+
+		OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId)
+				.or(() -> orderRepository.findByAliasId(trackingId))
+				.orElseThrow(() -> new OrderNotFoundException("Order with tracking ID '" + trackingId + "' not found"));
+		orderRecord.setName(dto.getName());
+		orderRecord.setDescription(dto.getDescription());
+		ContactInfo contactInfo = dto.getContactInfo();
+		orderRecord.setContactInfo(contactInfo);
+		orderRecord = orderRepository.save(orderRecord);
+		return OrderExtensionMapper.toDto(orderRecord);
+	}
+
+	private void validateExtensionRequest(OrderExtensionReqDto dto) {
+		if (dto.getName() == null || dto.getName().isBlank()) {
+			throw new IllegalArgumentException("Name is required");
+		}
+		if (dto.getDescription() == null || dto.getDescription().isBlank()) {
+			throw new IllegalArgumentException("Description is required");
+		}
+		ContactInfo ci = dto.getContactInfo();
+		if (ci == null) {
+			throw new IllegalArgumentException("Contact info is required");
+		}
+		if (ci.getFullName() == null || ci.getFullName().isBlank()) {
+			throw new IllegalArgumentException("Full name is required");
+		}
+		if (ci.getPhoneNumber() == null || !ci.getPhoneNumber().matches("^[0-9+\\s-]{6,20}$")) {
+			throw new IllegalArgumentException("Phone number is required and must match format: digits, +, spaces, or dashes (6-20 chars)");
+		}
+		if (ci.getZipCode() == null || !ci.getZipCode().matches("^\\d{4,6}$")) {
+			throw new IllegalArgumentException("Zip code is required and must be 4-6 digits");
+		}
+		if (ci.getCity() == null || ci.getCity().isBlank()) {
+			throw new IllegalArgumentException("City is required");
+		}
+		if (ci.getAddress() == null || ci.getAddress().isBlank()) {
+			throw new IllegalArgumentException("Address is required");
+		}
+	}
+
+	@Override
 	public OrderExtensionDto editContactInfo(Long id, ContactInfo contactInfo) {
 		OrderRecord orderRecord = orderRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Order not found"));

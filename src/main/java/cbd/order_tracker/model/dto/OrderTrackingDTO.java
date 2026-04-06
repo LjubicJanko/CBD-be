@@ -13,6 +13,8 @@ import java.util.List;
 @Data
 public class OrderTrackingDTO {
 
+	private Long id;
+	private String trackingId;
 	private String name;
 	private String description;
 	private LocalDate plannedEndingDate;
@@ -31,6 +33,8 @@ public class OrderTrackingDTO {
 	}
 
 	public OrderTrackingDTO(OrderRecord orderRecord) {
+		this.id = orderRecord.getId();
+		this.trackingId = orderRecord.getTrackingId();
 		this.name = orderRecord.getName();
 		this.description = orderRecord.getDescription();
 		this.plannedEndingDate = orderRecord.getPlannedEndingDate();

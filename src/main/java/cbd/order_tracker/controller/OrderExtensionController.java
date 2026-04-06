@@ -24,4 +24,9 @@ public class OrderExtensionController {
         return orderService.editContactInfo(id, contactInfo);
     }
 
+    @PutMapping("edit/{trackingId}")
+    public OrderExtensionDto editExtension(@PathVariable String trackingId, @RequestBody OrderExtensionReqDto dto) {
+        return orderService.editExtension(trackingId, dto);
+    }
+
 }
