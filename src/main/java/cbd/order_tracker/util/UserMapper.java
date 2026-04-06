@@ -8,7 +8,8 @@ public class UserMapper {
 		UserDto userDto = new UserDto();
 		userDto.setUsername(user.getUsername());
 		userDto.setFullName(user.getFullName());
-		userDto.setRoles(user.getRoles()); // Problematic if roles is not initialized
+		userDto.setCreatedAt(user.getCreatedAt());
+		userDto.setRoles(user.getRoles());
 		return userDto;
 	}
 }
