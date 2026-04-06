@@ -19,6 +19,7 @@ public class OrderOverviewDto {
 	private BigDecimal amountLeftToPay;
 	private String postalCode;
 	private String postalService;
+	private boolean extension;
 
 	public OrderOverviewDto() {
 	}
@@ -40,6 +41,7 @@ public class OrderOverviewDto {
 		BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
 		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
 		this.setAmountLeftToPay(amountLefToPay);
+		this.extension = Boolean.TRUE.equals(orderRecord.getExtension());
 	}
 
 	public OrderOverviewDto(
@@ -56,7 +58,8 @@ public class OrderOverviewDto {
 			BigDecimal salePrice,
 			BigDecimal salePriceWithTax,
 			boolean legalEntity,
-			BigDecimal amountPaid
+			BigDecimal amountPaid,
+			Boolean extension
 	) {
 		this.id = id;
 		this.name = name;
@@ -68,6 +71,7 @@ public class OrderOverviewDto {
 		this.dateWhenMovedToDone = dateWhenMovedToDone != null ? String.valueOf(dateWhenMovedToDone) : null;
 		this.postalCode = postalCode;
 		this.postalService = postalService;
+		this.extension = Boolean.TRUE.equals(extension);
 
 		BigDecimal priceForCalculation = legalEntity ? salePriceWithTax : salePrice;
 		BigDecimal amountLeftToPay = priceForCalculation.subtract(amountPaid);
@@ -162,5 +166,13 @@ public class OrderOverviewDto {
 
 	public void setPostalService(String postalService) {
 		this.postalService = postalService;
+	}
+
+	public boolean isExtension() {
+		return extension;
+	}
+
+	public void setExtension(boolean extension) {
+		this.extension = extension;
 	}
 }
