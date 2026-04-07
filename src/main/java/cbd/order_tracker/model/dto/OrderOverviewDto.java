@@ -12,7 +12,7 @@ public class OrderOverviewDto {
 	private String name;
 	private String description;
 	private LocalDate plannedEndingDate;
-	private String dateWhenMovedToDone;
+	private LocalDateTime dateWhenMovedToDone;
 	private OrderStatus status;
 	private OrderPriority priority;
 	private OrderExecutionStatus executionStatus;
@@ -34,7 +34,7 @@ public class OrderOverviewDto {
 		this.priority = orderRecord.getPriority();
 		this.executionStatus = orderRecord.getExecutionStatus();
 
-		this.dateWhenMovedToDone = String.valueOf(orderRecord.getDateWhenMovedToDone());
+		this.dateWhenMovedToDone = orderRecord.getDateWhenMovedToDone();
 		this.postalCode = orderRecord.getPostalCode();
 		this.postalService = orderRecord.getPostalService();
 
@@ -68,7 +68,7 @@ public class OrderOverviewDto {
 		this.status = status;
 		this.priority = priority;
 		this.executionStatus = executionStatus;
-		this.dateWhenMovedToDone = dateWhenMovedToDone != null ? String.valueOf(dateWhenMovedToDone) : null;
+		this.dateWhenMovedToDone = dateWhenMovedToDone;
 		this.postalCode = postalCode;
 		this.postalService = postalService;
 		this.extension = Boolean.TRUE.equals(extension);
@@ -136,11 +136,11 @@ public class OrderOverviewDto {
 		this.executionStatus = executionStatus;
 	}
 
-	public String getDateWhenMovedToDone() {
+	public LocalDateTime getDateWhenMovedToDone() {
 		return dateWhenMovedToDone;
 	}
 
-	public void setDateWhenMovedToDone(String dateWhenMovedToDone) {
+	public void setDateWhenMovedToDone(LocalDateTime dateWhenMovedToDone) {
 		this.dateWhenMovedToDone = dateWhenMovedToDone;
 	}
 

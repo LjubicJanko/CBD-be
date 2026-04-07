@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,7 +19,7 @@ public class OrderTrackingDTO {
 	private String name;
 	private String description;
 	private LocalDate plannedEndingDate;
-	private String lastUpdatedDate;
+	private LocalDateTime lastUpdatedDate;
 	private OrderStatus status;
 	private boolean isLegalEntity;
 	private BigDecimal amountLeftToPay;
@@ -40,7 +41,7 @@ public class OrderTrackingDTO {
 		this.plannedEndingDate = orderRecord.getPlannedEndingDate();
 		List<OrderStatusHistory> statusHistory = orderRecord.getStatusHistory();
 		OrderStatusHistory lastItem = statusHistory.get(statusHistory.size() - 1);
-		this.lastUpdatedDate = lastItem.getCreationTime().toString();
+		this.lastUpdatedDate = lastItem.getCreationTime();
 		this.status = orderRecord.getStatus();
 		this.isLegalEntity = orderRecord.isLegalEntity();
 		this.amountLeftToPay = orderRecord.getSalePrice().subtract(orderRecord.getAmountPaid());

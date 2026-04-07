@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 
 @AllArgsConstructor
 @Getter
@@ -16,7 +16,7 @@ public class PaymentDto {
     private Long id;
     private String payer;
     private BigDecimal amount;
-    private String paymentDate;
+    private LocalDate paymentDate;
     private PaymentMethod paymentMethod;
     private String note;
 
@@ -24,10 +24,7 @@ public class PaymentDto {
         this.id = payment.getId();
         this.payer = payment.getPayer();
         this.amount = payment.getAmount();
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        this.paymentDate = payment.getPaymentDate().format(formatter);
-
+        this.paymentDate = payment.getPaymentDate();
         this.paymentMethod = payment.getPaymentMethod();
         this.note = payment.getNote();
     }

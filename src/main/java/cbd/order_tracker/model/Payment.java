@@ -1,13 +1,11 @@
 package cbd.order_tracker.model;
 
 import cbd.order_tracker.model.dto.PaymentRequestDto;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 @Entity
 public class Payment {
@@ -27,7 +25,6 @@ public class Payment {
 	private BigDecimal amount; // Amount in RSD
 
 	@Column(nullable = false)
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
 	private LocalDate paymentDate; // Payment date, defaults to today
 
 	@Enumerated(EnumType.STRING)
@@ -42,8 +39,7 @@ public class Payment {
 		this.order = order;
 		this.payer = payment.getPayer();
 		this.amount = payment.getAmount();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-		this.paymentDate = LocalDate.parse(payment.getPaymentDate(), formatter);
+		this.paymentDate = payment.getPaymentDate();
 		this.paymentMethod = payment.getPaymentMethod();
 		this.note = payment.getNote();
 	}
