@@ -39,7 +39,7 @@ public class SecurityConfiguration {
                 .csrf().disable()
                 .cors().and()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/orderExtend/**", "/api/auth/**", "/api/orders/track/**", "/api/banners/active/**").permitAll()
+                .requestMatchers("/api/orderExtend/**", "/api/auth/login", "/api/orders/track/**", "/api/banners/active/**", "/api/public/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement()
@@ -59,8 +59,8 @@ public class SecurityConfiguration {
                 "https://cbd-fe.vercel.app",
                 "https://cbd-fe-ljubicjankos-projects.vercel.app"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Tenant-Id"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

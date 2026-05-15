@@ -44,9 +44,9 @@ public class BannersController {
         return ResponseEntity.ok(bannerService.getPublished());
     }
 
-    @GetMapping("/active")
-    public ResponseEntity<BannerResDto> getActiveBanner() {
-        return ResponseEntity.ok(bannerService.getActiveBanner());
+    @GetMapping("/active/{tenantSlug}")
+    public ResponseEntity<BannerResDto> getActiveBanner(@PathVariable String tenantSlug) {
+        return ResponseEntity.ok(bannerService.getActiveBanner(tenantSlug));
     }
 
 

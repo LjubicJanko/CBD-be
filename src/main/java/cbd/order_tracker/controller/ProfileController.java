@@ -9,6 +9,7 @@ import cbd.order_tracker.service.AuthenticationService;
 import cbd.order_tracker.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,6 +40,7 @@ public class ProfileController {
 	}
 
 	@PostMapping("/signup")
+	@PreAuthorize("hasRole('SUPERADMIN') or hasRole('company_admin')")
 	public ResponseEntity<User> register(@RequestBody RegisterUserDto registerUserDto) {
 		User registeredUser = authenticationService.signup(registerUserDto);
 

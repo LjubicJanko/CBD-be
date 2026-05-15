@@ -7,16 +7,33 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(OrderNotFoundException.class)
-	public ProblemDetail handleOrderNotFoundException(OrderNotFoundException exception) {
+	@ExceptionHandler({
+			OrderNotFoundException.class,
+			TenantNotFoundException.class,
+			RoleNotFoundException.class,
+			UserNotFoundException.class,
+			BannerNotFoundException.class,
+			PaymentNotFoundException.class
+	})
+	public ProblemDetail handleNotFound(RuntimeException exception) {
 		ProblemDetail errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(404), exception.getMessage());
-		errorDetail.setProperty("description", "The order with the given tracking ID does not exist");
+		errorDetail.setProperty("description", exception.getMessage());
+		return errorDetail;
+	}
+
+	@ExceptionHandler(TenantInactiveException.class)
+	public ProblemDetail handleTenantInactive(TenantInactiveException exception) {
+		ProblemDetail errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(410), exception.getMessage());
+		errorDetail.setProperty("description", "The tenant is deactivated");
 		return errorDetail;
 	}
 
@@ -31,6 +48,16 @@ public class GlobalExceptionHandler {
 	public ProblemDetail handleIllegalArgumentException(IllegalArgumentException exception) {
 		ProblemDetail errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(400), exception.getMessage());
 		errorDetail.setProperty("description", exception.getMessage());
+		return errorDetail;
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ProblemDetail handleValidation(MethodArgumentNotValidException exception) {
+		String message = exception.getBindingResult().getFieldErrors().stream()
+				.map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+				.collect(Collectors.joining("; "));
+		ProblemDetail errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(400), message);
+		errorDetail.setProperty("description", message);
 		return errorDetail;
 	}
 

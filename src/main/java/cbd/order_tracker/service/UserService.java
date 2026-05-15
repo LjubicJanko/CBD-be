@@ -1,5 +1,6 @@
 package cbd.order_tracker.service;
 
+import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.model.dto.UserDto;
 import cbd.order_tracker.repository.UserRepository;
 import cbd.order_tracker.util.UserMapper;
@@ -17,7 +18,7 @@ public class UserService {
 	}
 
 	public List<UserDto> allUsers() {
-		return userRepository.findAllWithRolesAndPrivileges()
+		return userRepository.findAllWithRolesAndPrivileges(TenantContext.requireTenantId())
 			.stream()
 			.map(UserMapper::toUserDto)
 			.collect(Collectors.toList());

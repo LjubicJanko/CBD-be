@@ -1,6 +1,7 @@
 package cbd.order_tracker.model;
 
 import cbd.order_tracker.model.dto.request.BannerReqDto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,12 +23,19 @@ public class Banner {
     private Long id;
 
     private String title;
+
+    @Column(length = 1000)
     private String text;
 
     @OneToMany(mappedBy = "banner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BannerPlacement> placements = new ArrayList<>();
 
     private boolean deleted = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id")
+    @JsonIgnore
+    private Tenant tenant;
 
     public Banner(BannerReqDto bannerReqDto) {
         this.setTitle(bannerReqDto.getTitle());

@@ -27,6 +27,19 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public Long extractTenantId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object tenantId = claims.get("tenantId");
+        if (tenantId == null) return null;
+        return ((Number) tenantId).longValue();
+    }
+
+    public boolean extractSuperadmin(String token) {
+        Claims claims = extractAllClaims(token);
+        Object superadmin = claims.get("superadmin");
+        return Boolean.TRUE.equals(superadmin);
+    }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);

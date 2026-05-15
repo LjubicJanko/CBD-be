@@ -18,17 +18,23 @@ import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
-	@Query("SELECT o FROM OrderRecord o WHERE o.trackingId = :trackingId AND o.deleted = false")
-	Optional<OrderRecord> findByTrackingId(String trackingId);
+	@Query("SELECT o FROM OrderRecord o WHERE o.trackingId = :trackingId AND o.deleted = false AND o.tenant.id = :tenantId")
+	Optional<OrderRecord> findByTrackingId(@Param("trackingId") String trackingId, @Param("tenantId") Long tenantId);
 
-	@Query("SELECT o FROM OrderRecord o JOIN o.aliasIds a WHERE a = :aliasId AND o.deleted = false")
-	Optional<OrderRecord> findByAliasId(@Param("aliasId") String aliasId);
+	@Query("SELECT o FROM OrderRecord o JOIN o.aliasIds a WHERE a = :aliasId AND o.deleted = false AND o.tenant.id = :tenantId")
+	Optional<OrderRecord> findByAliasId(@Param("aliasId") String aliasId, @Param("tenantId") Long tenantId);
 
-	@Query("SELECT o FROM OrderRecord o WHERE o.status IN :statuses AND o.deleted = false")
-	List<OrderRecord> findByStatusIn(List<OrderStatus> statuses);
+	@Query("SELECT o FROM OrderRecord o WHERE o.status IN :statuses AND o.deleted = false AND o.tenant.id = :tenantId")
+	List<OrderRecord> findByStatusIn(@Param("statuses") List<OrderStatus> statuses, @Param("tenantId") Long tenantId);
 
-	@Query("SELECT o FROM OrderRecord o WHERE (o.name LIKE %:nameTerm% OR o.description LIKE %:descriptionTerm%) AND o.deleted = false")
-	Page<OrderRecord> findByNameContainingOrDescriptionContaining(String nameTerm, String descriptionTerm, Pageable pageable);
+	@Query("SELECT o FROM OrderRecord o WHERE o.deleted = false AND o.tenant.id = :tenantId")
+	List<OrderRecord> findAllByTenant(@Param("tenantId") Long tenantId);
+
+	@Query("SELECT o FROM OrderRecord o WHERE o.deleted = false AND o.tenant.id = :tenantId")
+	Page<OrderRecord> findAllByTenant(@Param("tenantId") Long tenantId, Pageable pageable);
+
+	@Query("SELECT o FROM OrderRecord o WHERE (o.name LIKE %:nameTerm% OR o.description LIKE %:descriptionTerm%) AND o.deleted = false AND o.tenant.id = :tenantId")
+	Page<OrderRecord> findByNameContainingOrDescriptionContaining(@Param("nameTerm") String nameTerm, @Param("descriptionTerm") String descriptionTerm, @Param("tenantId") Long tenantId, Pageable pageable);
 
 	@Query("SELECT new cbd.order_tracker.model.dto.OrderOverviewDto(" +
 			"o.id, o.name, o.description, o.plannedEndingDate, o.status, o.priority, o.executionStatus, " +
@@ -39,20 +45,22 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 			"(:statuses IS NULL OR o.status IN :statuses) AND " +
 			"(:priorities IS NULL OR o.priority IN :priorities) AND " +
 			"(:executionStatuses IS NULL OR o.executionStatus IN :executionStatuses) AND " +
-			"o.deleted = false")
+			"o.deleted = false AND o.tenant.id = :tenantId")
 	Page<OrderOverviewDto> findOverviewBySearchAndFilters(
 			@Param("searchTerm") String searchTerm,
 			@Param("statuses") List<OrderStatus> statuses,
 			@Param("priorities") List<OrderPriority> priorities,
 			@Param("executionStatuses") List<OrderExecutionStatus> executionStatuses,
+			@Param("tenantId") Long tenantId,
 			Pageable pageable
 	);
 
 	@Query("SELECT o FROM OrderRecord o WHERE o.status = cbd.order_tracker.model.OrderStatus.DONE " +
 			"AND o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED " +
 			"AND (:from IS NULL OR o.dateWhenMovedToDone >= :from) " +
-			"AND (:to IS NULL OR o.dateWhenMovedToDone <= :to)")
-	List<OrderRecord> findCompletedOrders(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+			"AND (:to IS NULL OR o.dateWhenMovedToDone <= :to) " +
+			"AND o.tenant.id = :tenantId")
+	List<OrderRecord> findCompletedOrders(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, @Param("tenantId") Long tenantId);
 
 	@Query("SELECT COUNT(o), " +
 			"COALESCE(SUM(o.acquisitionCost), 0), " +
@@ -65,7 +73,8 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 			"FROM OrderRecord o " +
 			"WHERE o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED " +
 			"AND (:from IS NULL OR o.dateWhenMovedToDone >= :from) " +
-			"AND (:to IS NULL OR o.dateWhenMovedToDone <= :to)")
-	Object[] getOrderReport(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+			"AND (:to IS NULL OR o.dateWhenMovedToDone <= :to) " +
+			"AND o.tenant.id = :tenantId")
+	Object[] getOrderReport(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, @Param("tenantId") Long tenantId);
 
 }

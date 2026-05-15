@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.SQLRestriction;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -83,6 +85,11 @@ public class OrderRecord {
 	@Column(name = "extension", nullable = false)
 	private Boolean extension = false;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "tenant_id")
+	@JsonIgnore
+	private Tenant tenant;
+
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "order_alias_ids", joinColumns = @JoinColumn(name = "order_id"))
 	@Column(name = "alias_id")
@@ -118,7 +125,6 @@ public class OrderRecord {
 		addStatusHistory(status, null, null);
 	}
 
-	//	todo: check this copy constructor
 	public OrderRecord(OrderRecord order) {
 		this.name = order.getName();
 		this.description = order.getDescription();
@@ -142,6 +148,7 @@ public class OrderRecord {
 		this.dateWhenMovedToDone = null;
 		this.postalCode = null;
 		this.postalService = null;
+		this.tenant = order.getTenant();
 		addStatusHistory(status, null, null);
 	}
 

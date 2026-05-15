@@ -36,7 +36,7 @@ public class OrderMapper {
 
 	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history, Collection<Role> roles) {
 		OrderDTO dto = new OrderDTO();
-		boolean isAdmin = roles.stream().anyMatch(role -> "admin".equals(role.getName()));
+		boolean isAdmin = roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
 
 		dto.setId(orderRecord.getId());
 		dto.setName(orderRecord.getName());

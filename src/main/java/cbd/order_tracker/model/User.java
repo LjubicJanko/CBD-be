@@ -15,7 +15,7 @@ import java.util.*;
 @Entity
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private Integer id;
 
@@ -27,6 +27,14 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    private boolean superadmin = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id")
+    @JsonIgnore
+    private Tenant tenant;
 
     @CreationTimestamp
     @Column(updatable = false, name = "created_at")
@@ -52,16 +60,20 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    public User(RegisterUserDto registerUserDto, Role role, String encodedPassword) {
+    public User(RegisterUserDto registerUserDto, Role role, String encodedPassword, Tenant tenant) {
         this.fullName = registerUserDto.getFullName();
         this.username = registerUserDto.getUsername();
         this.password = encodedPassword;
         this.roles = new HashSet<>(Collections.singleton(role));
+        this.tenant = tenant;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        if (superadmin) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_SUPERADMIN"));
+        }
         if (roles != null) {
             roles.forEach(role -> {
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
@@ -107,6 +119,10 @@ public class User implements UserDetails {
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
     public Date getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
+    public boolean isSuperadmin() { return superadmin; }
+    public void setSuperadmin(boolean superadmin) { this.superadmin = superadmin; }
+    public Tenant getTenant() { return tenant; }
+    public void setTenant(Tenant tenant) { this.tenant = tenant; }
 
     @Override
     public String toString() {

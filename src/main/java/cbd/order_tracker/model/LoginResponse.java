@@ -12,6 +12,10 @@ public class LoginResponse {
 	private Set<String> privileges;
 	private String name;
 	private String username;
+	private Long tenantId;
+	private String tenantSlug;
+	private String tenantLogoUrl;
+	private boolean superadmin;
 
 	public String getToken() {
 		return token;
@@ -25,7 +29,8 @@ public class LoginResponse {
 	public LoginResponse() {
 	}
 
-	public LoginResponse(Integer id, String token, long expiresIn, Collection<Role> roles, String fullName, String username) {
+	public LoginResponse(Integer id, String token, long expiresIn, Collection<Role> roles, String fullName, String username,
+					   Long tenantId, String tenantSlug, boolean superadmin) {
 		this.id = id;
 		this.token = token;
 		this.expiresIn = expiresIn;
@@ -38,6 +43,9 @@ public class LoginResponse {
 				.collect(Collectors.toSet());
 		this.name = fullName;
 		this.username = username;
+		this.tenantId = tenantId;
+		this.tenantSlug = tenantSlug;
+		this.superadmin = superadmin;
 	}
 
 	public String getUsername() {
@@ -89,8 +97,17 @@ public class LoginResponse {
 		this.privileges = privileges;
 	}
 
+	public Long getTenantId() { return tenantId; }
+	public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
+	public String getTenantSlug() { return tenantSlug; }
+	public void setTenantSlug(String tenantSlug) { this.tenantSlug = tenantSlug; }
+	public String getTenantLogoUrl() { return tenantLogoUrl; }
+	public void setTenantLogoUrl(String tenantLogoUrl) { this.tenantLogoUrl = tenantLogoUrl; }
+	public boolean isSuperadmin() { return superadmin; }
+	public void setSuperadmin(boolean superadmin) { this.superadmin = superadmin; }
+
 	@Override
 	public String toString() {
-		return "LoginResponse{" + "token='" + token + '\'' + ", expiresIn=" + expiresIn + '}';
+		return "LoginResponse{username='" + username + "', expiresIn=" + expiresIn + ", superadmin=" + superadmin + '}';
 	}
 }
