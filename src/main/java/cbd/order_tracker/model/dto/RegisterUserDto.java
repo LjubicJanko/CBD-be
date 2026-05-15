@@ -5,6 +5,7 @@ public class RegisterUserDto {
     private String password;
     private String fullName;
     private String role;
+    private Long tenantId;
 
     public RegisterUserDto(String username, String password, String fullName, String role) {
         this.username = username;
@@ -47,6 +48,9 @@ public class RegisterUserDto {
         this.fullName = fullName;
         return this;
     }
+
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
 
     @Override
     public String toString() {

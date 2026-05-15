@@ -14,7 +14,7 @@ public interface BannerService {
 
     BannerResDto getPublished();
 
-    BannerResDto getActiveBanner();
+    BannerResDto getActiveBanner(String tenantSlug);
 
     BannerResDto publish(Long bannerId, List<PageType> pages);
 

@@ -1,6 +1,10 @@
 package cbd.order_tracker.service.impl;
 
+import cbd.order_tracker.config.TenantContext;
+import cbd.order_tracker.config.TenantGuard;
 import cbd.order_tracker.exceptions.OrderNotFoundException;
+import cbd.order_tracker.exceptions.PaymentNotFoundException;
+import cbd.order_tracker.exceptions.TenantNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.model.dto.request.CombineExtensionsReqDto;
@@ -15,10 +19,9 @@ import cbd.order_tracker.util.PaymentMapper;
 import cbd.order_tracker.util.UserUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,35 +36,48 @@ import java.util.stream.StreamSupport;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
+	private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
+
 	private final UserUtil userUtil;
-	private final UserRepository userRepository;
 	private final OrderRepository orderRepository;
 	private final PaymentRepository paymentRepository;
 	private final OrderStatusHistoryRepository statusHistoryRepository;
+	private final TenantRepository tenantRepository;
+
+	private OrderRecord findOrderForCurrentTenant(Long id) {
+		OrderRecord order = orderRepository.findById(id)
+				.orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
+		TenantGuard.assertTenantMatch(order.getTenant());
+		return order;
+	}
+
+	private Long tenantId() {
+		return TenantContext.requireTenantId();
+	}
 
 	@Override
 	public OrderDTO createOrder(OrderRecord order) {
 		OrderRecord newOrder = new OrderRecord(order);
+		Tenant tenant = tenantRepository.findById(tenantId())
+				.orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
+		newOrder.setTenant(tenant);
 		OrderRecord orderRecord = orderRepository.save(newOrder);
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName();
-		User user = userRepository.findByUsernameWithRoles(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+		Set<Role> roles = userUtil.getCurrentUserRoles();
 
-		return OrderMapper.toDto(orderRecord, new ArrayList<>(), user.getRoles());
+		return OrderMapper.toDto(orderRecord, new ArrayList<>(), roles);
 	}
 
 	@Override
-	public OrderExtensionDto createExtension(OrderExtensionReqDto orderExtensionReqDto) {
+	public OrderExtensionDto createExtension(OrderExtensionReqDto orderExtensionReqDto, Tenant tenant) {
 		OrderRecord newOrder = new OrderRecord(orderExtensionReqDto);
+		newOrder.setTenant(tenant);
 		OrderRecord orderRecord = orderRepository.save(newOrder);
 		return OrderExtensionMapper.toDto(orderRecord);
 	}
 
 	@Override
 	public OrderDTO updateOrder(OrderRecord order) {
-		OrderRecord orderRecord = orderRepository.findById(order.getId())
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+		OrderRecord orderRecord = findOrderForCurrentTenant(order.getId());
 		orderRecord.setName(order.getName());
 		orderRecord.setDescription(order.getDescription());
 		orderRecord.setNote(order.getNote());
@@ -73,99 +89,75 @@ public class OrderServiceImpl implements OrderService {
 		orderRecord.setLegalEntity(order.isLegalEntity());
 
 		var history = getOrderStatusHistory(order.getId());
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName();
-		User user = userRepository.findByUsernameWithRoles(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+		Set<Role> roles = userUtil.getCurrentUserRoles();
 
-		return OrderMapper.toDto(orderRepository.save(orderRecord), history, user.getRoles());
+		return OrderMapper.toDto(orderRepository.save(orderRecord), history, roles);
 	}
 
 	@Transactional
 	@Override
 	public OrderDTO changeExecutionStatus(Long id, OrderExecutionStatus executionStatus, String note) {
-		OrderRecord orderRecord = orderRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+		OrderRecord orderRecord = findOrderForCurrentTenant(id);
 		orderRecord.setExecutionStatus(executionStatus);
 		orderRecord.setPausingComment(note);
 		orderRecord.addExecutionStatusHistory(executionStatus, note);
 		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName();
-		User user = userRepository.findByUsernameWithRoles(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+		Set<Role> roles = userUtil.getCurrentUserRoles();
 
-		return OrderMapper.toDto(orderRecord, history, user.getRoles());
+		return OrderMapper.toDto(orderRecord, history, roles);
 	}
 
 	@Override
 	public OrderDTO pauseOrder(Long id, String pausingComment) {
-		OrderRecord orderRecord = orderRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+		OrderRecord orderRecord = findOrderForCurrentTenant(id);
 		orderRecord.setExecutionStatus(OrderExecutionStatus.PAUSED);
 		orderRecord.setPausingComment(pausingComment);
 		orderRecord.addExecutionStatusHistory(OrderExecutionStatus.PAUSED, pausingComment);
 		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName();
-		User user = userRepository.findByUsernameWithRoles(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+		Set<Role> roles = userUtil.getCurrentUserRoles();
 
-		return OrderMapper.toDto(orderRecord, history, user.getRoles());
+		return OrderMapper.toDto(orderRecord, history, roles);
 	}
 
 	@Override
 	public OrderDTO reactivateOrder(Long id) {
-		OrderRecord orderRecord = orderRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+		OrderRecord orderRecord = findOrderForCurrentTenant(id);
 		orderRecord.setExecutionStatus(OrderExecutionStatus.ACTIVE);
 		orderRecord.addExecutionStatusHistory(OrderExecutionStatus.ACTIVE, null);
 		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName();
-		User user = userRepository.findByUsernameWithRoles(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+		Set<Role> roles = userUtil.getCurrentUserRoles();
 
-		return OrderMapper.toDto(orderRecord, history, user.getRoles());
+		return OrderMapper.toDto(orderRecord, history, roles);
 	}
 
 	@Override
 	public OrderDTO changeStatus(Long id, String closingComment, String postalCode, String postalService) {
-		OrderRecord orderRecord = orderRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
-		try {
-			String currentUser = UserUtil.getCurrentUserName();
-			List<OrderStatusHistory> historyList = getOrderStatusHistory(id);
-			var lastHistoryRecord = historyList.get(historyList.size() - 1);
-			lastHistoryRecord.setClosingComment(closingComment);
-			lastHistoryRecord.setUser(currentUser);
-			orderRecord.setStatusHistory(historyList);
-			orderRecord.nextStatus(postalCode, postalService);
-			orderRepository.save(orderRecord);
-		} catch (IllegalStateException error) {
-			System.out.println(error.getMessage());
-		}
+		OrderRecord orderRecord = findOrderForCurrentTenant(id);
+		String currentUser = UserUtil.getCurrentUserName();
+		List<OrderStatusHistory> historyList = getOrderStatusHistory(id);
+		var lastHistoryRecord = historyList.get(historyList.size() - 1);
+		lastHistoryRecord.setClosingComment(closingComment);
+		lastHistoryRecord.setUser(currentUser);
+		orderRecord.setStatusHistory(historyList);
+		orderRecord.nextStatus(postalCode, postalService);
+		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName();
-		User user = userRepository.findByUsernameWithRoles(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+		Set<Role> roles = userUtil.getCurrentUserRoles();
 
-		return OrderMapper.toDto(orderRecord, history, user.getRoles());
+		return OrderMapper.toDto(orderRecord, history, roles);
 	}
 
 	@Transactional
 	@Override
 	public UpdatePaymentsResponse addPayment(Long id, PaymentRequestDto payment) {
-		OrderRecord orderRecord = orderRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+		OrderRecord orderRecord = findOrderForCurrentTenant(id);
 		payment.setOrder(orderRecord);
 		orderRecord.addPayment(payment);
 		orderRecord = orderRepository.save(orderRecord);
@@ -180,12 +172,11 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	@Override
 	public UpdatePaymentsResponse editPayment(Long orderId, Payment updatedPayment) {
-		OrderRecord orderRecord = orderRepository.findById(orderId)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+		OrderRecord orderRecord = findOrderForCurrentTenant(orderId);
 		Payment existingPayment = orderRecord.getPayments().stream()
 				.filter(payment -> payment.getId().equals(updatedPayment.getId()))
 				.findFirst()
-				.orElseThrow(() -> new RuntimeException("Payment not found"));
+				.orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
 
 		var diff = existingPayment.getAmount().subtract(updatedPayment.getAmount());
 		if (diff.compareTo(BigDecimal.ZERO) != 0) {
@@ -210,12 +201,11 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	@Override
 	public UpdatePaymentsResponse deletePayment(Long orderId, Long paymentId) {
-		OrderRecord orderRecord = orderRepository.findById(orderId)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+		OrderRecord orderRecord = findOrderForCurrentTenant(orderId);
 		Payment paymentToDelete = orderRecord.getPayments().stream()
 				.filter(payment -> payment.getId().equals(paymentId))
 				.findFirst()
-				.orElseThrow(() -> new RuntimeException("Payment not found"));
+				.orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
 
 		orderRecord.getPayments().remove(paymentToDelete);
 		orderRecord.setAmountPaid(orderRecord.getAmountPaid().subtract(paymentToDelete.getAmount()));
@@ -233,9 +223,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public OrderDTO getOrderById(Long id) {
-		OrderRecord orderRecord = orderRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
-//		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		OrderRecord orderRecord = findOrderForCurrentTenant(id);
 		Set<Role> roles = userUtil.getCurrentUserRoles();
 
 		return OrderMapper.toDto(orderRecord, new ArrayList<>(), roles);
@@ -261,7 +249,7 @@ public class OrderServiceImpl implements OrderService {
 				page, perPage, Sort.by(direction, sortProp).and(Sort.by("id"))
 		);
 		Page<OrderOverviewDto> orderDtos = orderRepository.findOverviewBySearchAndFilters(
-				searchTerm, statuses, priorities, executionStatuses, pageRequest);
+				searchTerm, statuses, priorities, executionStatuses, TenantContext.requireTenantId(), pageRequest);
 
 		return new PageableResponse<>(page, perPage, orderDtos.getTotalPages(),
 				orderDtos.getTotalElements(), orderDtos.getContent());
@@ -269,29 +257,31 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public List<OrderDTO> getAll(List<OrderStatus> statuses) {
+		Long tid = TenantContext.requireTenantId();
 		Iterable<OrderRecord> orderRecords = (statuses != null && !statuses.isEmpty()) ?
-				orderRepository.findByStatusIn(statuses) : orderRepository.findAll();
+				orderRepository.findByStatusIn(statuses, tid) : orderRepository.findAllByTenant(tid);
 
 		List<OrderRecord> orderRecordList = StreamSupport.stream(orderRecords.spliterator(), false)
 				.toList();
 
+		Set<Role> roles = userUtil.getCurrentUserRoles();
 		return orderRecordList.stream()
 				.map(orderRecord -> {
 					List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(orderRecord.getId());
-					Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-					String username = auth.getName();
-					User user = userRepository.findByUsernameWithRoles(username)
-							.orElseThrow(() -> new RuntimeException("User not found"));
-					return OrderMapper.toDto(orderRecord, history, user.getRoles());
+					return OrderMapper.toDto(orderRecord, history, roles);
 				})
 				.collect(Collectors.toList());
 	}
 
 	@Override
-	public OrderTrackingDTO getOrderByTrackingId(String trackingId) {
-		OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId)
-				.or(() -> orderRepository.findByAliasId(trackingId))
-				.orElseThrow(() -> new OrderNotFoundException("Order with tracking ID '" + trackingId + "' not found"));
+	public OrderTrackingDTO getOrderByTrackingId(String tenantSlug, String trackingId) {
+		Tenant tenant = tenantRepository.findBySlug(tenantSlug.toLowerCase())
+				.filter(Tenant::isActive)
+				.orElseThrow(() -> new OrderNotFoundException("Order not found"));
+		Long tid = tenant.getId();
+		OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId, tid)
+				.or(() -> orderRepository.findByAliasId(trackingId, tid))
+				.orElseThrow(() -> new OrderNotFoundException("Order not found"));
 		List<OrderStatusHistory> history = getOrderStatusHistory(orderRecord.getId());
 		orderRecord.setStatusHistory(history);
         return OrderMapper.toOrderTrackingDTO(orderRecord);
@@ -299,8 +289,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public void deleteOrder(Long id) {
-		OrderRecord order = orderRepository.findById(id)
-				.orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + id));
+		OrderRecord order = findOrderForCurrentTenant(id);
 		order.setDeleted(true);
 		orderRepository.save(order);
 	}
@@ -315,10 +304,11 @@ public class OrderServiceImpl implements OrderService {
 		Pageable pageRequest = PageRequest.of(page, perPage);
 		Page<OrderRecord> orderRecords;
 
+		Long tid = TenantContext.requireTenantId();
 		if (searchTerm == null || searchTerm.isEmpty()) {
-			orderRecords = orderRepository.findAll(pageRequest);
+			orderRecords = orderRepository.findAllByTenant(tid, pageRequest);
 		} else {
-			orderRecords = orderRepository.findByNameContainingOrDescriptionContaining(searchTerm, searchTerm, pageRequest);
+			orderRecords = orderRepository.findByNameContainingOrDescriptionContaining(searchTerm, searchTerm, tid, pageRequest);
 		}
 
 		var orderOverviewDtos = orderRecords.stream().map(OrderMapper::toOverviewDto).collect(Collectors.toList());
@@ -329,11 +319,13 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public List<Payment> getPayments(Long orderId) {
+		findOrderForCurrentTenant(orderId);
 		return paymentRepository.findByOrderId(orderId);
 	}
 
 	@Override
 	public List<OrderStatusHistoryDTO> getHistory(Long orderId) {
+		findOrderForCurrentTenant(orderId);
 		var history = statusHistoryRepository.findByOrderId(orderId);
 
 		return OrderMapper.mapStatusHistory(history);
@@ -343,8 +335,9 @@ public class OrderServiceImpl implements OrderService {
 	public OrderExtensionDto editExtension(String trackingId, OrderExtensionReqDto dto) {
 		validateExtensionRequest(dto);
 
-		OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId)
-				.or(() -> orderRepository.findByAliasId(trackingId))
+		Long tid = tenantId();
+		OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId, tid)
+				.or(() -> orderRepository.findByAliasId(trackingId, tid))
 				.orElseThrow(() -> new OrderNotFoundException("Order with tracking ID '" + trackingId + "' not found"));
 		orderRecord.setName(dto.getName());
 		orderRecord.setDescription(dto.getDescription());
@@ -383,9 +376,11 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public OrderExtensionDto editContactInfo(Long id, ContactInfo contactInfo) {
-		OrderRecord orderRecord = orderRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Order not found"));
+	public OrderExtensionDto editContactInfo(String trackingId, ContactInfo contactInfo) {
+		Long tid = tenantId();
+		OrderRecord orderRecord = orderRepository.findByTrackingId(trackingId, tid)
+				.or(() -> orderRepository.findByAliasId(trackingId, tid))
+				.orElseThrow(() -> new OrderNotFoundException("Order not found"));
 		orderRecord.setContactInfo(contactInfo);
 		orderRecord = orderRepository.save(orderRecord);
 		return OrderExtensionMapper.toDto(orderRecord);
@@ -394,8 +389,7 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	@Override
 	public OrderDTO editShipmentInfo(Long id, EditShipmentInfoDto dto) {
-		OrderRecord orderRecord = orderRepository.findById(id)
-				.orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
+		OrderRecord orderRecord = findOrderForCurrentTenant(id);
 
 		if (orderRecord.getStatus() != OrderStatus.SHIPPED) {
 			throw new IllegalStateException("Order must be in SHIPPED status to edit shipment info");
@@ -424,12 +418,9 @@ public class OrderServiceImpl implements OrderService {
 
 		orderRepository.save(orderRecord);
 
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String username = auth.getName();
-		User user = userRepository.findByUsernameWithRoles(username)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+		Set<Role> roles = userUtil.getCurrentUserRoles();
 
-		return OrderMapper.toDto(orderRecord, history, user.getRoles());
+		return OrderMapper.toDto(orderRecord, history, roles);
 	}
 
 	@Transactional
@@ -441,8 +432,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		Long mainId = ids.get(0);
-		OrderRecord mainOrder = orderRepository.findById(mainId)
-				.orElseThrow(() -> new OrderNotFoundException("Extension not found with id: " + mainId));
+		OrderRecord mainOrder = findOrderForCurrentTenant(mainId);
 
 		if (!Boolean.TRUE.equals(mainOrder.getExtension())) {
 			throw new IllegalArgumentException("Order with id " + mainId + " is not an extension");
@@ -452,8 +442,7 @@ public class OrderServiceImpl implements OrderService {
 
 		for (int i = 1; i < ids.size(); i++) {
 			Long otherId = ids.get(i);
-			OrderRecord otherOrder = orderRepository.findById(otherId)
-					.orElseThrow(() -> new OrderNotFoundException("Extension not found with id: " + otherId));
+			OrderRecord otherOrder = findOrderForCurrentTenant(otherId);
 
 			if (!Boolean.TRUE.equals(otherOrder.getExtension())) {
 				throw new IllegalArgumentException("Order with id " + otherId + " is not an extension");

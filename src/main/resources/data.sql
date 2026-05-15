@@ -1,12 +1,17 @@
 
--- Insert into users
-INSERT INTO users (id, created_at, updated_at, username, full_name, password) VALUES
-(2, '2025-06-10 17:12:06.803000', '2025-06-10 17:12:06.803000', 'janko', 'Janko Ljubic', '$2a$10$32I8LTgojlnoubqi1thPaejOQELVtIujDfkY5VTlB./ddbmiixqqG'),
-(1, '2025-06-10 17:10:14.479000', '2025-06-10 17:10:14.480000', 'milica', 'Milica Ljubic', '$2a$10$y7J.7LHt.M3sAJSfIbSjcOdyeg9LWtEI6a7PyvNPldJPx7bTyW2H.');
+-- Insert default tenant
+INSERT IGNORE INTO tenant (id, name, slug, active, created_at, updated_at) VALUES
+(1, 'CBD', 'cbd', true, '2025-06-10 17:00:00', '2025-06-10 17:00:00');
 
--- Insert into role
+-- Insert into users (tenant_id=1 for regular users, NULL for superadmin)
+INSERT INTO users (id, created_at, updated_at, username, full_name, password, superadmin, tenant_id) VALUES
+(2, '2025-06-10 17:12:06.803000', '2025-06-10 17:12:06.803000', 'janko', 'Janko Ljubic', '$2a$10$32I8LTgojlnoubqi1thPaejOQELVtIujDfkY5VTlB./ddbmiixqqG', false, 1),
+(1, '2025-06-10 17:10:14.479000', '2025-06-10 17:10:14.480000', 'milica', 'Milica Ljubic', '$2a$10$y7J.7LHt.M3sAJSfIbSjcOdyeg9LWtEI6a7PyvNPldJPx7bTyW2H.', false, 1),
+(3, '2025-06-10 17:00:00', '2025-06-10 17:00:00', 'superadmin', 'Platform Admin', '$2a$10$32I8LTgojlnoubqi1thPaejOQELVtIujDfkY5VTlB./ddbmiixqqG', true, NULL);
+
+-- Insert into role (admin renamed to company_admin)
 INSERT INTO role (id, name) VALUES
-(1, 'admin'),
+(1, 'company_admin'),
 (2, 'manufacturer'),
 (3, 'manager');
 

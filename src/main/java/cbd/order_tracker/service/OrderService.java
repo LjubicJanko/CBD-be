@@ -13,7 +13,7 @@ public interface OrderService {
 
     OrderDTO createOrder(OrderRecord order);
 
-    OrderExtensionDto createExtension(OrderExtensionReqDto order);
+    OrderExtensionDto createExtension(OrderExtensionReqDto order, Tenant tenant);
 
     OrderDTO updateOrder(OrderRecord order);
 
@@ -46,7 +46,7 @@ public interface OrderService {
 
     List<OrderDTO> getAll(List<OrderStatus> statuses);
 
-    OrderTrackingDTO getOrderByTrackingId(String trackingId);
+    OrderTrackingDTO getOrderByTrackingId(String tenantSlug, String trackingId);
 
     void deleteOrder(Long id);
 
@@ -58,7 +58,7 @@ public interface OrderService {
 
     List<OrderStatusHistoryDTO> getHistory(Long orderId);
 
-    OrderExtensionDto editContactInfo(Long id, ContactInfo contactInfo);
+    OrderExtensionDto editContactInfo(String trackingId, ContactInfo contactInfo);
 
     OrderExtensionDto editExtension(String trackingId, OrderExtensionReqDto dto);
 

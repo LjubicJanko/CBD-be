@@ -10,12 +10,12 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends CrudRepository<User, Integer> {
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.username = :username")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles LEFT JOIN FETCH u.tenant WHERE u.username = :username")
     Optional<User> findByUsernameWithRoles(@Param("username") String username);
 
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.privileges WHERE u.username = :username")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.privileges LEFT JOIN FETCH u.tenant WHERE u.username = :username")
     Optional<User> findByUsernameWithRolesAndPrivileges(@Param("username") String username);
 
-    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.privileges")
-    List<User> findAllWithRolesAndPrivileges();
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.privileges LEFT JOIN FETCH u.tenant WHERE u.tenant.id = :tenantId")
+    List<User> findAllWithRolesAndPrivileges(@Param("tenantId") Long tenantId);
 }

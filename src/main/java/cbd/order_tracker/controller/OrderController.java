@@ -9,7 +9,6 @@ import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 import cbd.order_tracker.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,10 +69,10 @@ public class OrderController {
 		return new ResponseEntity<PageableResponse<OrderOverviewDto>>(orderService.searchOrders(searchTerm, page, perPage), HttpStatus.OK);
 	}
 
-	@GetMapping("/track/{trackingId}")
-	public ResponseEntity<OrderTrackingDTO> trackOrder(@PathVariable String trackingId) {
+	@GetMapping("/track/{tenantSlug}/{trackingId}")
+	public ResponseEntity<OrderTrackingDTO> trackOrder(@PathVariable String tenantSlug, @PathVariable String trackingId) {
 		try {
-			OrderTrackingDTO trackingDTO = orderService.getOrderByTrackingId(trackingId);
+			OrderTrackingDTO trackingDTO = orderService.getOrderByTrackingId(tenantSlug, trackingId);
 			return ResponseEntity.ok(trackingDTO);
 		} catch (OrderNotFoundException e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -131,7 +130,6 @@ public class OrderController {
 		return new ResponseEntity<>(orderService.deletePayment(id, paymentId), HttpStatus.OK);
 	}
 
-	@PreAuthorize("hasAuthority('order-info-edit')")
 	@PutMapping("/editShipmentInfo/{id}")
 	public ResponseEntity<OrderDTO> editShipmentInfo(@PathVariable Long id, @RequestBody EditShipmentInfoDto dto) {
 		return new ResponseEntity<>(orderService.editShipmentInfo(id, dto), HttpStatus.OK);

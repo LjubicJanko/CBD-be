@@ -1,5 +1,6 @@
 package cbd.order_tracker.service.impl;
 
+import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.response.OrderReportDto;
 import cbd.order_tracker.model.dto.response.StatusDurationDto;
@@ -31,11 +32,11 @@ public class ReportServiceImpl implements ReportService {
         LocalDateTime fromDateTime = from != null ? from.atStartOfDay() : null;
         LocalDateTime toDateTime = to != null ? to.atTime(LocalTime.MAX) : null;
 
-        Object[] raw = orderRepository.getOrderReport(fromDateTime, toDateTime);
+        Object[] raw = orderRepository.getOrderReport(fromDateTime, toDateTime, TenantContext.requireTenantId());
         Object[] result = (raw.length == 1 && raw[0] instanceof Object[]) ? (Object[]) raw[0] : raw;
 
         Set<Role> roles = userUtil.getCurrentUserRoles();
-        boolean isAdmin = roles.stream().anyMatch(role -> "admin".equals(role.getName()));
+        boolean isAdmin = roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
 
         OrderReportDto dto = new OrderReportDto();
         dto.setOrderCount(((Number) result[0]).longValue());
@@ -59,7 +60,7 @@ public class ReportServiceImpl implements ReportService {
         LocalDateTime fromDateTime = from != null ? from.atStartOfDay() : null;
         LocalDateTime toDateTime = to != null ? to.atTime(LocalTime.MAX) : null;
 
-        List<OrderRecord> completedOrders = orderRepository.findCompletedOrders(fromDateTime, toDateTime);
+        List<OrderRecord> completedOrders = orderRepository.findCompletedOrders(fromDateTime, toDateTime, TenantContext.requireTenantId());
 
         // Track total hours per status across all orders
         Map<OrderStatus, Double> totalHoursPerStatus = new EnumMap<>(OrderStatus.class);

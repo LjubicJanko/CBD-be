@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local / staging configs containing secrets ###
+src/main/resources/application-staging.properties
+src/main/resources/application-local.properties
+
+### Claude Code local state (contains command allowlist; may include credentials) ###
+.claude/
