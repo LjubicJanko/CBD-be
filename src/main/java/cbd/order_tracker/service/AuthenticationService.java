@@ -14,6 +14,7 @@ import cbd.order_tracker.repository.RolesRepository;
 import cbd.order_tracker.repository.TenantRepository;
 import cbd.order_tracker.repository.UserRepository;
 import cbd.order_tracker.util.UserMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -98,6 +99,9 @@ public class AuthenticationService {
 	public UserDto changePassword(ChangePasswordDto changePasswordDto) {
 		var user = userRepository.findByUsernameWithRolesAndPrivileges(changePasswordDto.getUsername())
 				.orElseThrow(() -> new UserNotFoundException("User not found"));
+		if (user.isSuperadmin()) {
+			throw new AccessDeniedException("Superadmin password cannot be changed through the application");
+		}
 		if (!passwordEncoder.matches(changePasswordDto.getOldPassword(), user.getPassword())) {
 			throw new IllegalArgumentException("Old password is incorrect");
 		}

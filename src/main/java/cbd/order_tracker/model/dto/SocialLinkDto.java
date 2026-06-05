@@ -21,7 +21,7 @@ import org.hibernate.validator.constraints.URL;
 public class SocialLinkDto {
 
 	@NotBlank(message = "type is required")
-	@Pattern(regexp = "INSTAGRAM|FACEBOOK", message = "type must be INSTAGRAM or FACEBOOK")
+	@Pattern(regexp = "INSTAGRAM|FACEBOOK|WEBSITE", message = "type must be INSTAGRAM, FACEBOOK or WEBSITE")
 	private String type;
 
 	@NotBlank(message = "url is required")
