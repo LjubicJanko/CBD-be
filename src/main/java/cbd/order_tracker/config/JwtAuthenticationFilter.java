@@ -1,6 +1,7 @@
 package cbd.order_tracker.config;
 
 import cbd.order_tracker.model.Tenant;
+import cbd.order_tracker.repository.PrivilegeRepository;
 import cbd.order_tracker.repository.TenantRepository;
 import cbd.order_tracker.service.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -12,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,6 +24,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -31,17 +37,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtService jwtService;
 	private final UserDetailsService userDetailsService;
 	private final TenantRepository tenantRepository;
+	private final PrivilegeRepository privilegeRepository;
 
 	public JwtAuthenticationFilter(
 			JwtService jwtService,
 			UserDetailsService userDetailsService,
 			HandlerExceptionResolver handlerExceptionResolver,
-			TenantRepository tenantRepository
+			TenantRepository tenantRepository,
+			PrivilegeRepository privilegeRepository
 	) {
 		this.jwtService = jwtService;
 		this.userDetailsService = userDetailsService;
 		this.handlerExceptionResolver = handlerExceptionResolver;
 		this.tenantRepository = tenantRepository;
+		this.privilegeRepository = privilegeRepository;
 	}
 
 	@Override
@@ -67,15 +76,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 				UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 				if (jwtService.isTokenValid(jwt, userDetails)) {
+					boolean isSuperadmin = jwtService.extractSuperadmin(jwt);
+
+					// A superadmin's stored authorities are just ROLE_SUPERADMIN (no role rows ->
+					// no privileges). Mirror the login response by granting every privilege so
+					// hasAuthority(...) gates (attendance, work-location, etc.) pass uniformly.
+					Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+					if (isSuperadmin) {
+						List<GrantedAuthority> all = new ArrayList<>(authorities);
+						privilegeRepository.findAll().forEach(p -> all.add(new SimpleGrantedAuthority(p.getName())));
+						authorities = all;
+					}
+
 					UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
 							userDetails,
 							null,
-							userDetails.getAuthorities()
+							authorities
 					);
 					authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 					SecurityContextHolder.getContext().setAuthentication(authToken);
 
-					boolean isSuperadmin = jwtService.extractSuperadmin(jwt);
 					TenantContext.setSuperadmin(isSuperadmin);
 
 					if (isSuperadmin) {

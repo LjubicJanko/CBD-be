@@ -41,6 +41,11 @@ public class Tenant {
 	@Column(name = "logo_content_type", length = 64)
 	private String logoContentType;
 
+	// Null when unset. Stored as flat social_link_* columns; Hibernate maps an
+	// all-null component back to null.
+	@Embedded
+	private SocialLink socialLink;
+
 	public Tenant() {}
 
 	public Tenant(String name, String slug) {

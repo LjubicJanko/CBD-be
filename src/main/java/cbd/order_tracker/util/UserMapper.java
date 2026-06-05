@@ -9,6 +9,7 @@ import java.time.ZoneId;
 public class UserMapper {
 	public static UserDto toUserDto(User user) {
 		UserDto userDto = new UserDto();
+		userDto.setId(user.getId());
 		userDto.setUsername(user.getUsername());
 		userDto.setFullName(user.getFullName());
 		if (user.getCreatedAt() != null) {

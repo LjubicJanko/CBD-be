@@ -56,6 +56,8 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
+                "http://192.168.1.14:5173",
+                "https://192.168.1.14:5173",
                 "https://cbd-fe.vercel.app",
                 "https://cbd-fe-ljubicjankos-projects.vercel.app"
         ));

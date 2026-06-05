@@ -2,6 +2,8 @@ package cbd.order_tracker.exceptions;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +17,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
 	@ExceptionHandler({
 			OrderNotFoundException.class,
@@ -51,6 +55,13 @@ public class GlobalExceptionHandler {
 		return errorDetail;
 	}
 
+	@ExceptionHandler(AttendanceDomainException.class)
+	public ProblemDetail handleAttendanceDomain(AttendanceDomainException ex) {
+		ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(422), ex.getMessage());
+		pd.setProperty("reason", ex.getReason().code());
+		return pd;
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ProblemDetail handleValidation(MethodArgumentNotValidException exception) {
 		String message = exception.getBindingResult().getFieldErrors().stream()
@@ -65,8 +76,8 @@ public class GlobalExceptionHandler {
 	public ProblemDetail handleSecurityException(Exception exception) {
 		ProblemDetail errorDetail = null;
 
-		// TODO send this stack trace to an observability tool
-		exception.printStackTrace();
+		// TODO send this to an observability tool
+		log.error("Unhandled exception", exception);
 
 		if (exception instanceof BadCredentialsException) {
 			errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(401), exception.getMessage());

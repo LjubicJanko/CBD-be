@@ -27,7 +27,11 @@ INSERT INTO privilege (id, name) VALUES
 (8, 'move-to-done'),
 (9, 'order-cancel'),
 (10, 'order-pause'),
-(11, 'payment-add');
+(11, 'payment-add'),
+(12, 'attendance-check-in'),
+(13, 'attendance-view-all'),
+(14, 'attendance-edit'),
+(15, 'location-manage');
 
 -- Insert into users_roles
 INSERT INTO users_roles (user_id, role_id) VALUES
@@ -47,8 +51,15 @@ INSERT INTO roles_privileges (privilege_id, role_id) VALUES
 (9, 1),
 (10, 1),
 (11, 1),
+(12, 1),
+(13, 1),
+(14, 1),
+(15, 1),
 (4, 2),
 (5, 2),
 (6, 2),
 (7, 2),
-(10, 2);
+(10, 2),
+(12, 2),
+(12, 3),
+(13, 3);

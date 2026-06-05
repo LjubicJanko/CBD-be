@@ -1,6 +1,7 @@
 package cbd.order_tracker.model.dto.response;
 
 import cbd.order_tracker.model.Tenant;
+import cbd.order_tracker.model.dto.SocialLinkDto;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ public class TenantResDto {
 	private boolean active;
 	private LocalDateTime createdAt;
 	private String logoUrl;
+	private SocialLinkDto socialLink;
 
 	public TenantResDto(Tenant tenant) {
 		this.id = tenant.getId();
@@ -23,5 +25,6 @@ public class TenantResDto {
 		this.logoUrl = tenant.getLogoBytes() != null && tenant.getLogoBytes().length > 0
 				? "/api/public/tenants/" + tenant.getSlug() + "/logo"
 				: null;
+		this.socialLink = tenant.getSocialLink() != null ? new SocialLinkDto(tenant.getSocialLink()) : null;
 	}
 }

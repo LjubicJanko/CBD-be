@@ -5,7 +5,9 @@ import cbd.order_tracker.exceptions.TenantNotFoundException;
 import cbd.order_tracker.model.Tenant;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.model.dto.RegisterUserDto;
+import cbd.order_tracker.model.dto.SocialLinkDto;
 import cbd.order_tracker.model.dto.request.CreateTenantReqDto;
+import cbd.order_tracker.model.dto.request.UpdateOwnTenantReqDto;
 import cbd.order_tracker.model.dto.response.TenantPublicDto;
 import cbd.order_tracker.model.dto.response.TenantResDto;
 import cbd.order_tracker.repository.RolesRepository;
@@ -66,6 +68,9 @@ public class PlatformServiceImpl implements PlatformService {
 			throw new IllegalArgumentException("Tenant with slug '" + normalizedSlug + "' already exists");
 		}
 		Tenant tenant = new Tenant(dto.getName(), normalizedSlug);
+		if (dto.getSocialLink() != null) {
+			tenant.setSocialLink(dto.getSocialLink().toEntity());
+		}
 		tenant = tenantRepository.save(tenant);
 		return new TenantResDto(tenant);
 	}
@@ -87,8 +92,30 @@ public class PlatformServiceImpl implements PlatformService {
 			}
 			tenant.setSlug(normalizedSlug);
 		}
+		applySocialLink(tenant, dto.getSocialLink(), dto.isSocialLinkProvided());
 		tenant = tenantRepository.save(tenant);
 		return new TenantResDto(tenant);
+	}
+
+	@Override
+	@Transactional
+	public TenantResDto updateOwnTenant(Long tenantId, UpdateOwnTenantReqDto dto) {
+		Tenant tenant = tenantRepository.findById(tenantId)
+				.orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
+		// Self-service: name + socialLink only. Slug and active are intentionally not touched.
+		tenant.setName(dto.getName());
+		applySocialLink(tenant, dto.getSocialLink(), dto.isSocialLinkProvided());
+		tenant = tenantRepository.save(tenant);
+		return new TenantResDto(tenant);
+	}
+
+	// Null-vs-omitted: socialLink explicitly present (even as null) is applied — a non-null
+	// object sets/replaces, an explicit null clears; an omitted field (not provided) leaves
+	// the existing link untouched.
+	private void applySocialLink(Tenant tenant, SocialLinkDto socialLink, boolean provided) {
+		if (provided) {
+			tenant.setSocialLink(socialLink != null ? socialLink.toEntity() : null);
+		}
 	}
 
 	@Override

@@ -53,6 +53,19 @@ public class TenantDataMigration implements ApplicationRunner {
 			log.info("Backfilled tenant_id=1 for {} existing users", users);
 		}
 
+		// Seed the CBD tenant's social link with the previously-hardcoded footer
+		// value so the public footer keeps rendering after the FE switches to the
+		// dynamic value. Only fills when unset, so superadmin edits are preserved.
+		int socialLink = entityManager.createNativeQuery(
+				"UPDATE tenant SET social_link_type = 'INSTAGRAM', " +
+						"social_link_url = 'https://www.instagram.com/cbd_sportswear', " +
+						"social_link_display_text = 'cbd_sportswear' " +
+						"WHERE slug = 'cbd' AND social_link_type IS NULL")
+				.executeUpdate();
+		if (socialLink > 0) {
+			log.info("Seeded social link for CBD tenant");
+		}
+
 		// Rename admin role to company_admin if it still exists
 		int roles = entityManager.createNativeQuery(
 				"UPDATE role SET name = 'company_admin' WHERE name = 'admin'")

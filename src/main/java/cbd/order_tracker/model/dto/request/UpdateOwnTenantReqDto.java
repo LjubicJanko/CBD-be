@@ -4,26 +4,24 @@ import cbd.order_tracker.model.dto.SocialLinkDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * Body for a company_admin editing their OWN tenant. Deliberately exposes only
+ * name + socialLink — slug and active are not editable here. Any stray slug/active
+ * field in the JSON is ignored (Spring Boot's Jackson defaults to
+ * fail-on-unknown-properties=false), so it never breaks the save.
+ */
 @Data
-public class CreateTenantReqDto {
+public class UpdateOwnTenantReqDto {
 
 	@NotBlank
 	@Size(min = 1, max = 120)
 	private String name;
 
-	@NotBlank
-	@Size(min = 2, max = 64)
-	@Pattern(regexp = "^[a-z0-9-]+$", message = "slug must contain only lowercase letters, digits, and hyphens")
-	private String slug;
-
-	// Optional. On update: an explicit `null` clears the link, while an OMITTED
-	// field leaves it unchanged (tracked via socialLinkProvided). On create:
-	// present -> set, omitted/null -> no link. @Valid cascades validation only
-	// when the object is present.
+	// Same null-vs-omitted semantics as the platform endpoint: explicit null clears,
+	// an omitted field leaves the link unchanged (tracked via socialLinkProvided).
 	@Valid
 	private SocialLinkDto socialLink;
 
