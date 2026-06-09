@@ -124,6 +124,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 								return;
 							}
 							TenantContext.setTenantId(parsed);
+							TenantContext.setFeatures(new java.util.HashSet<>(tenant.get().getFeatures()));
 							log.info("Superadmin impersonation: user={} targetTenantId={} method={} uri={}",
 									username, parsed, request.getMethod(), request.getRequestURI());
 						}
@@ -143,6 +144,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 							return;
 						}
 						TenantContext.setTenantId(tenantId);
+						TenantContext.setFeatures(new java.util.HashSet<>(tenant.get().getFeatures()));
 					}
 				}
 			}

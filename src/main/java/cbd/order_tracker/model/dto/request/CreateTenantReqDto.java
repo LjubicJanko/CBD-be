@@ -8,6 +8,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CreateTenantReqDto {
 
@@ -30,8 +32,22 @@ public class CreateTenantReqDto {
 	@JsonIgnore
 	private boolean socialLinkProvided = false;
 
+	// Optional, honored on UPDATE only (creation defaults are backend-owned).
+	// Validated against Feature.KEYS in the service. Tracked null-vs-omitted:
+	// an omitted field leaves features unchanged; a present array (even empty)
+	// replaces the set.
+	private List<String> features;
+
+	@JsonIgnore
+	private boolean featuresProvided = false;
+
 	public void setSocialLink(SocialLinkDto socialLink) {
 		this.socialLink = socialLink;
 		this.socialLinkProvided = true;
+	}
+
+	public void setFeatures(List<String> features) {
+		this.features = features;
+		this.featuresProvided = true;
 	}
 }

@@ -5,6 +5,8 @@ import cbd.order_tracker.model.dto.SocialLinkDto;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class TenantResDto {
@@ -15,6 +17,7 @@ public class TenantResDto {
 	private LocalDateTime createdAt;
 	private String logoUrl;
 	private SocialLinkDto socialLink;
+	private Set<String> features;
 
 	public TenantResDto(Tenant tenant) {
 		this.id = tenant.getId();
@@ -26,5 +29,6 @@ public class TenantResDto {
 				? "/api/public/tenants/" + tenant.getSlug() + "/logo"
 				: null;
 		this.socialLink = tenant.getSocialLink() != null ? new SocialLinkDto(tenant.getSocialLink()) : null;
+		this.features = tenant.getFeatures() != null ? new HashSet<>(tenant.getFeatures()) : new HashSet<>();
 	}
 }

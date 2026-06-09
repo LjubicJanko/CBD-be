@@ -4,6 +4,7 @@ import cbd.order_tracker.exceptions.RoleNotFoundException;
 import cbd.order_tracker.exceptions.TenantNotFoundException;
 import cbd.order_tracker.model.Tenant;
 import cbd.order_tracker.model.User;
+import cbd.order_tracker.model.enums.Feature;
 import cbd.order_tracker.model.dto.RegisterUserDto;
 import cbd.order_tracker.model.dto.SocialLinkDto;
 import cbd.order_tracker.model.dto.request.CreateTenantReqDto;
@@ -21,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -71,6 +74,8 @@ public class PlatformServiceImpl implements PlatformService {
 		if (dto.getSocialLink() != null) {
 			tenant.setSocialLink(dto.getSocialLink().toEntity());
 		}
+		// Backend-owned defaults; any client-supplied features are ignored on create.
+		tenant.setFeatures(Feature.defaultKeys());
 		tenant = tenantRepository.save(tenant);
 		return new TenantResDto(tenant);
 	}
@@ -93,8 +98,29 @@ public class PlatformServiceImpl implements PlatformService {
 			tenant.setSlug(normalizedSlug);
 		}
 		applySocialLink(tenant, dto.getSocialLink(), dto.isSocialLinkProvided());
+		applyFeatures(tenant, dto.getFeatures(), dto.isFeaturesProvided());
 		tenant = tenantRepository.save(tenant);
 		return new TenantResDto(tenant);
+	}
+
+	// An omitted OR explicitly-null `features` field leaves the set untouched
+	// (Jackson invokes the setter for a JSON null too, so `provided` alone can't
+	// distinguish them). To disable every module, send an explicit empty array.
+	// Unknown keys are rejected (400).
+	private void applyFeatures(Tenant tenant, List<String> features, boolean provided) {
+		if (!provided || features == null) {
+			return;
+		}
+		Set<String> incoming = new LinkedHashSet<>();
+		if (features != null) {
+			for (String key : features) {
+				if (!Feature.isValidKey(key)) {
+					throw new IllegalArgumentException("Unknown feature key: '" + key + "'");
+				}
+				incoming.add(key);
+			}
+		}
+		tenant.setFeatures(incoming);
 	}
 
 	@Override

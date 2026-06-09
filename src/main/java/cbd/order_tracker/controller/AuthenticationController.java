@@ -3,6 +3,7 @@ package cbd.order_tracker.controller;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.model.dto.LoginUserDto;
+import cbd.order_tracker.model.enums.Feature;
 import cbd.order_tracker.repository.PrivilegeRepository;
 import cbd.order_tracker.service.AuthenticationService;
 import cbd.order_tracker.service.JwtService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,6 +60,8 @@ public class AuthenticationController {
 			loginResponse.setTenantLogoUrl("/api/public/tenants/" + tenant.getSlug() + "/logo");
 		}
 
+		loginResponse.setFeatures(tenant != null ? new HashSet<>(tenant.getFeatures()) : new HashSet<>());
+
 		// Response-shaping only: superadmin has no users_roles row in DB.
 		// We project as company_admin + all privileges so the FE's privilege gates
 		// light up uniformly. The actual granted authority is ROLE_SUPERADMIN.
@@ -67,6 +71,8 @@ public class AuthenticationController {
 					.map(Privilege::getName)
 					.collect(Collectors.toSet());
 			loginResponse.setPrivileges(allPrivileges);
+			// Superadmin bypasses feature gates; expose all modules so the FE shows them.
+			loginResponse.setFeatures(new HashSet<>(Feature.KEYS));
 		}
 
 		return ResponseEntity.ok(loginResponse);

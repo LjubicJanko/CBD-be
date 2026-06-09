@@ -1,7 +1,9 @@
 package cbd.order_tracker.controller;
 
+import cbd.order_tracker.config.FeatureGuard;
 import cbd.order_tracker.exceptions.OrderNotFoundException;
 import cbd.order_tracker.model.*;
+import cbd.order_tracker.model.enums.Feature;
 import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.model.dto.request.CombineExtensionsReqDto;
 import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
@@ -21,6 +23,7 @@ import java.util.Map;
 public class OrderController {
 
 	private final OrderService orderService;
+	private final FeatureGuard featureGuard;
 
 	@GetMapping("/get/{id}")
 	public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id) {
@@ -71,6 +74,8 @@ public class OrderController {
 
 	@GetMapping("/track/{tenantSlug}/{trackingId}")
 	public ResponseEntity<OrderTrackingDTO> trackOrder(@PathVariable String tenantSlug, @PathVariable String trackingId) {
+		// Public order tracking belongs to the order-extension module.
+		featureGuard.requireFeatureBySlug(tenantSlug, Feature.ORDER_EXTENSION.getKey());
 		try {
 			OrderTrackingDTO trackingDTO = orderService.getOrderByTrackingId(tenantSlug, trackingId);
 			return ResponseEntity.ok(trackingDTO);

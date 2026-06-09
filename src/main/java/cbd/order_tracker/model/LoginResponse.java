@@ -16,6 +16,7 @@ public class LoginResponse {
 	private String tenantSlug;
 	private String tenantLogoUrl;
 	private boolean superadmin;
+	private Set<String> features;
 
 	public String getToken() {
 		return token;
@@ -105,6 +106,8 @@ public class LoginResponse {
 	public void setTenantLogoUrl(String tenantLogoUrl) { this.tenantLogoUrl = tenantLogoUrl; }
 	public boolean isSuperadmin() { return superadmin; }
 	public void setSuperadmin(boolean superadmin) { this.superadmin = superadmin; }
+	public Set<String> getFeatures() { return features; }
+	public void setFeatures(Set<String> features) { this.features = features; }
 
 	@Override
 	public String toString() {

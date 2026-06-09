@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -45,6 +47,14 @@ public class Tenant {
 	// all-null component back to null.
 	@Embedded
 	private SocialLink socialLink;
+
+	// Enabled premium feature keys (see Feature enum), stored as a single
+	// comma-separated column via FeatureSetConverter. Co-located on the tenant
+	// row so it loads with the entity (read by the JWT filter outside a
+	// transaction) and avoids an extra SELECT per tenant on listings.
+	@Convert(converter = FeatureSetConverter.class)
+	@Column(name = "features", length = 255)
+	private Set<String> features = new LinkedHashSet<>();
 
 	public Tenant() {}
 

@@ -1,8 +1,10 @@
 package cbd.order_tracker.controller;
 
+import cbd.order_tracker.config.FeatureGuard;
 import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.model.ContactInfo;
 import cbd.order_tracker.model.Tenant;
+import cbd.order_tracker.model.enums.Feature;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 import cbd.order_tracker.repository.TenantRepository;
@@ -19,6 +21,7 @@ public class OrderExtensionController {
 
     private final OrderService orderService;
     private final TenantRepository tenantRepository;
+    private final FeatureGuard featureGuard;
 
     private Tenant resolveTenant(String tenantSlug) {
         Tenant tenant = tenantRepository.findBySlug(tenantSlug.toLowerCase())
@@ -32,6 +35,7 @@ public class OrderExtensionController {
     public OrderExtensionDto createOrderExtension(@PathVariable String tenantSlug, @RequestBody OrderExtensionReqDto order) {
         Tenant tenant = resolveTenant(tenantSlug);
         try {
+            featureGuard.requireFeature(tenant, Feature.ORDER_EXTENSION.getKey());
             return orderService.createExtension(order, tenant);
         } finally {
             TenantContext.clear();
@@ -40,8 +44,9 @@ public class OrderExtensionController {
 
     @PutMapping("/editContactInfo/{trackingId}")
     public OrderExtensionDto editContactInfo(@PathVariable String tenantSlug, @PathVariable String trackingId, @RequestBody ContactInfo contactInfo) {
-        resolveTenant(tenantSlug);
+        Tenant tenant = resolveTenant(tenantSlug);
         try {
+            featureGuard.requireFeature(tenant, Feature.ORDER_EXTENSION.getKey());
             return orderService.editContactInfo(trackingId, contactInfo);
         } finally {
             TenantContext.clear();
@@ -50,8 +55,9 @@ public class OrderExtensionController {
 
     @PutMapping("/edit/{trackingId}")
     public OrderExtensionDto editExtension(@PathVariable String tenantSlug, @PathVariable String trackingId, @RequestBody OrderExtensionReqDto dto) {
-        resolveTenant(tenantSlug);
+        Tenant tenant = resolveTenant(tenantSlug);
         try {
+            featureGuard.requireFeature(tenant, Feature.ORDER_EXTENSION.getKey());
             return orderService.editExtension(trackingId, dto);
         } finally {
             TenantContext.clear();

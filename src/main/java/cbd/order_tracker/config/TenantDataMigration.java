@@ -73,5 +73,20 @@ public class TenantDataMigration implements ApplicationRunner {
 		if (roles > 0) {
 			log.info("Renamed 'admin' role to 'company_admin'");
 		}
+
+		// Backfill feature flags for tenants that predate the per-tenant feature
+		// system (features column still NULL). Before feature-gating existed,
+		// EVERY module — including attendance and reports — was reachable by any
+		// privileged user, so we enable the full set to avoid revoking access on
+		// deploy. The platform admin can disable premium modules per tenant
+		// afterwards. New tenants are created with an explicit (non-null) default
+		// set, so they are never matched here.
+		int features = entityManager.createNativeQuery(
+				"UPDATE tenant SET features = 'orders,order-extension,banners,attendance,reports' " +
+						"WHERE features IS NULL")
+				.executeUpdate();
+		if (features > 0) {
+			log.info("Backfilled full feature set for {} pre-existing tenant(s)", features);
+		}
 	}
 }
