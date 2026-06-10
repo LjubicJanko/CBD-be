@@ -18,6 +18,8 @@ public class TenantResDto {
 	private String logoUrl;
 	private SocialLinkDto socialLink;
 	private Set<String> features;
+	private String accentColor;
+	private String backgroundColor;
 
 	public TenantResDto(Tenant tenant) {
 		this.id = tenant.getId();
@@ -30,5 +32,7 @@ public class TenantResDto {
 				: null;
 		this.socialLink = tenant.getSocialLink() != null ? new SocialLinkDto(tenant.getSocialLink()) : null;
 		this.features = tenant.getFeatures() != null ? new HashSet<>(tenant.getFeatures()) : new HashSet<>();
+		this.accentColor = tenant.getAccentColor();
+		this.backgroundColor = tenant.getBackgroundColor();
 	}
 }

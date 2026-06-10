@@ -76,6 +76,7 @@ public class PlatformServiceImpl implements PlatformService {
 		}
 		// Backend-owned defaults; any client-supplied features are ignored on create.
 		tenant.setFeatures(Feature.defaultKeys());
+		applyColors(tenant, dto);
 		tenant = tenantRepository.save(tenant);
 		return new TenantResDto(tenant);
 	}
@@ -99,8 +100,25 @@ public class PlatformServiceImpl implements PlatformService {
 		}
 		applySocialLink(tenant, dto.getSocialLink(), dto.isSocialLinkProvided());
 		applyFeatures(tenant, dto.getFeatures(), dto.isFeaturesProvided());
+		applyColors(tenant, dto);
 		tenant = tenantRepository.save(tenant);
 		return new TenantResDto(tenant);
+	}
+
+	// Theme colors, null-vs-omitted like socialLink: an omitted field leaves the
+	// stored color untouched; an explicit null clears it; a value sets it.
+	// Format is enforced by @Pattern on the DTO (6-digit hex); we store uppercase.
+	private void applyColors(Tenant tenant, CreateTenantReqDto dto) {
+		if (dto.isAccentColorProvided()) {
+			tenant.setAccentColor(normalizeColor(dto.getAccentColor()));
+		}
+		if (dto.isBackgroundColorProvided()) {
+			tenant.setBackgroundColor(normalizeColor(dto.getBackgroundColor()));
+		}
+	}
+
+	private static String normalizeColor(String color) {
+		return color == null ? null : color.toUpperCase();
 	}
 
 	// An omitted OR explicitly-null `features` field leaves the set untouched

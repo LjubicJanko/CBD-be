@@ -16,6 +16,8 @@ public class TenantPublicDto {
 	private String logoUrl;
 	private SocialLinkDto socialLink;
 	private Set<String> features;
+	private String accentColor;
+	private String backgroundColor;
 
 	public TenantPublicDto(Tenant tenant) {
 		this.name = tenant.getName();
@@ -29,5 +31,7 @@ public class TenantPublicDto {
 				: tenant.getFeatures().stream()
 						.filter(Feature.PUBLIC_KEYS::contains)
 						.collect(Collectors.toCollection(LinkedHashSet::new));
+		this.accentColor = tenant.getAccentColor();
+		this.backgroundColor = tenant.getBackgroundColor();
 	}
 }

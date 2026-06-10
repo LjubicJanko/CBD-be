@@ -62,6 +62,10 @@ public class AuthenticationController {
 
 		loginResponse.setFeatures(tenant != null ? new HashSet<>(tenant.getFeatures()) : new HashSet<>());
 
+		// Lets the themed UI apply immediately on login. Superadmin has no tenant -> both null.
+		loginResponse.setTenantAccentColor(tenant != null ? tenant.getAccentColor() : null);
+		loginResponse.setTenantBackgroundColor(tenant != null ? tenant.getBackgroundColor() : null);
+
 		// Response-shaping only: superadmin has no users_roles row in DB.
 		// We project as company_admin + all privileges so the FE's privilege gates
 		// light up uniformly. The actual granted authority is ROLE_SUPERADMIN.

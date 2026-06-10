@@ -17,6 +17,8 @@ public class LoginResponse {
 	private String tenantLogoUrl;
 	private boolean superadmin;
 	private Set<String> features;
+	private String tenantAccentColor;
+	private String tenantBackgroundColor;
 
 	public String getToken() {
 		return token;
@@ -108,6 +110,10 @@ public class LoginResponse {
 	public void setSuperadmin(boolean superadmin) { this.superadmin = superadmin; }
 	public Set<String> getFeatures() { return features; }
 	public void setFeatures(Set<String> features) { this.features = features; }
+	public String getTenantAccentColor() { return tenantAccentColor; }
+	public void setTenantAccentColor(String tenantAccentColor) { this.tenantAccentColor = tenantAccentColor; }
+	public String getTenantBackgroundColor() { return tenantBackgroundColor; }
+	public void setTenantBackgroundColor(String tenantBackgroundColor) { this.tenantBackgroundColor = tenantBackgroundColor; }
 
 	@Override
 	public String toString() {

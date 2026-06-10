@@ -15,7 +15,8 @@ public enum Feature {
 	ORDER_EXTENSION("order-extension"),
 	BANNERS("banners"),
 	ATTENDANCE("attendance"),
-	REPORTS("reports");
+	REPORTS("reports"),
+	THEMING("theming");
 
 	private final String key;
 
@@ -37,7 +38,7 @@ public enum Feature {
 	 * drive public-facing pages. Back-office modules (orders, attendance,
 	 * reports) are intentionally withheld from the public projection.
 	 */
-	public static final Set<String> PUBLIC_KEYS = Set.of(ORDER_EXTENSION.key, BANNERS.key);
+	public static final Set<String> PUBLIC_KEYS = Set.of(ORDER_EXTENSION.key, BANNERS.key, THEMING.key);
 
 	/** Backend-owned defaults seeded on tenant creation. */
 	public static Set<String> defaultKeys() {

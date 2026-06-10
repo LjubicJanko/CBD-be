@@ -41,6 +41,22 @@ public class CreateTenantReqDto {
 	@JsonIgnore
 	private boolean featuresProvided = false;
 
+	// Optional theme colors. Same null-vs-omitted semantics as socialLink: an
+	// omitted field leaves the stored color unchanged, an explicit null clears it
+	// (-> FE default), a string sets it. 6-digit hex only; @Pattern passes for
+	// null so "clear" is accepted. Stored uppercase (normalized in the service).
+	@Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "accentColor must be a 6-digit hex color, e.g. #D4FF00")
+	private String accentColor;
+
+	@JsonIgnore
+	private boolean accentColorProvided = false;
+
+	@Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "backgroundColor must be a 6-digit hex color, e.g. #0B1120")
+	private String backgroundColor;
+
+	@JsonIgnore
+	private boolean backgroundColorProvided = false;
+
 	public void setSocialLink(SocialLinkDto socialLink) {
 		this.socialLink = socialLink;
 		this.socialLinkProvided = true;
@@ -49,5 +65,15 @@ public class CreateTenantReqDto {
 	public void setFeatures(List<String> features) {
 		this.features = features;
 		this.featuresProvided = true;
+	}
+
+	public void setAccentColor(String accentColor) {
+		this.accentColor = accentColor;
+		this.accentColorProvided = true;
+	}
+
+	public void setBackgroundColor(String backgroundColor) {
+		this.backgroundColor = backgroundColor;
+		this.backgroundColorProvided = true;
 	}
 }

@@ -56,6 +56,15 @@ public class Tenant {
 	@Column(name = "features", length = 255)
 	private Set<String> features = new LinkedHashSet<>();
 
+	// Per-tenant theme colors, applied by the FE only when the `theming` feature
+	// is on. Null = use the FE's built-in default palette. Stored as a 6-digit
+	// uppercase hex string (e.g. #D4FF00); the FE derives every other shade.
+	@Column(name = "accent_color", length = 7)
+	private String accentColor;
+
+	@Column(name = "background_color", length = 7)
+	private String backgroundColor;
+
 	public Tenant() {}
 
 	public Tenant(String name, String slug) {
