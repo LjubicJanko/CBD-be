@@ -3,6 +3,7 @@ package cbd.order_tracker.service.impl;
 import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.response.OrderReportDto;
+import cbd.order_tracker.model.dto.response.OrderReportRaw;
 import cbd.order_tracker.model.dto.response.StatusDurationDto;
 import cbd.order_tracker.model.dto.response.StatusDurationReportDto;
 import cbd.order_tracker.repository.OrderRepository;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,23 +34,23 @@ public class ReportServiceImpl implements ReportService {
         LocalDateTime fromDateTime = from != null ? from.atStartOfDay() : null;
         LocalDateTime toDateTime = to != null ? to.atTime(LocalTime.MAX) : null;
 
-        Object[] raw = orderRepository.getOrderReport(fromDateTime, toDateTime, TenantContext.requireTenantId());
-        Object[] result = (raw.length == 1 && raw[0] instanceof Object[]) ? (Object[]) raw[0] : raw;
+        OrderReportRaw raw = OrderReportRaw.from(
+                orderRepository.getOrderReport(fromDateTime, toDateTime, TenantContext.requireTenantId()));
 
         Set<Role> roles = userUtil.getCurrentUserRoles();
-        boolean isAdmin = roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
+        boolean isAdmin = TenantContext.isSuperadmin() || roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
 
         OrderReportDto dto = new OrderReportDto();
-        dto.setOrderCount(((Number) result[0]).longValue());
-        dto.setTotalAcquisitionCost(new BigDecimal(result[1].toString()));
-        dto.setAverageAcquisitionCost(new BigDecimal(result[2].toString()));
-        dto.setExtensionOrderCount(((Number) result[6]).longValue());
-        dto.setRegularOrderCount(((Number) result[7]).longValue());
+        dto.setOrderCount(raw.orderCount());
+        dto.setTotalAcquisitionCost(raw.totalAcquisitionCost());
+        dto.setAverageAcquisitionCost(raw.avgAcquisitionCost());
+        dto.setExtensionOrderCount(raw.extensionOrderCount());
+        dto.setRegularOrderCount(raw.regularOrderCount());
 
         if (isAdmin) {
-            dto.setTotalAmountPaid(new BigDecimal(result[3].toString()));
-            dto.setTotalSalePrice(new BigDecimal(result[4].toString()));
-            dto.setTotalOutstanding(new BigDecimal(result[5].toString()));
+            dto.setTotalAmountPaid(raw.totalAmountPaid());
+            dto.setTotalSalePrice(raw.totalSalePrice());
+            dto.setTotalOutstanding(raw.totalOutstanding());
             dto.setProfitMargin(dto.getTotalSalePrice().subtract(dto.getTotalAcquisitionCost()));
         }
 
@@ -62,12 +64,18 @@ public class ReportServiceImpl implements ReportService {
 
         List<OrderRecord> completedOrders = orderRepository.findCompletedOrders(fromDateTime, toDateTime, TenantContext.requireTenantId());
 
+        List<Long> orderIds = completedOrders.stream().map(OrderRecord::getId).toList();
+        Map<Long, List<OrderStatusHistory>> historyByOrderId = orderIds.isEmpty()
+                ? Map.of()
+                : statusHistoryRepository.findByOrderIdIn(orderIds).stream()
+                        .collect(Collectors.groupingBy(h -> h.getOrder().getId()));
+
         // Track total hours per status across all orders
         Map<OrderStatus, Double> totalHoursPerStatus = new EnumMap<>(OrderStatus.class);
         Map<OrderStatus, Long> orderCountPerStatus = new EnumMap<>(OrderStatus.class);
 
         for (OrderRecord order : completedOrders) {
-            List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(order.getId());
+            List<OrderStatusHistory> history = historyByOrderId.getOrDefault(order.getId(), List.of());
 
             // Split history into status transitions and pause/unpause events
             List<OrderStatusHistory> statusEntries = history.stream()

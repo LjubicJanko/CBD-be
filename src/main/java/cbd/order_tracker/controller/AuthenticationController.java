@@ -4,7 +4,6 @@ import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.model.dto.LoginUserDto;
 import cbd.order_tracker.model.enums.Feature;
-import cbd.order_tracker.repository.PrivilegeRepository;
 import cbd.order_tracker.service.AuthenticationService;
 import cbd.order_tracker.service.JwtService;
 import org.springframework.http.ResponseEntity;
@@ -17,21 +16,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RequestMapping("/api/auth")
 @RestController
 public class AuthenticationController {
 	private final JwtService jwtService;
-
 	private final AuthenticationService authenticationService;
 
-	private final PrivilegeRepository privilegeRepository;
-
-	public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService, PrivilegeRepository privilegeRepository) {
+	public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService) {
 		this.jwtService = jwtService;
 		this.authenticationService = authenticationService;
-		this.privilegeRepository = privilegeRepository;
 	}
 
 	@PostMapping("/login")
@@ -71,10 +65,7 @@ public class AuthenticationController {
 		// light up uniformly. The actual granted authority is ROLE_SUPERADMIN.
 		if (authenticatedUser.isSuperadmin()) {
 			loginResponse.setRoles(Set.of("company_admin"));
-			Set<String> allPrivileges = privilegeRepository.findAll().stream()
-					.map(Privilege::getName)
-					.collect(Collectors.toSet());
-			loginResponse.setPrivileges(allPrivileges);
+			loginResponse.setPrivileges(authenticationService.getAllPrivilegeNames());
 			// Superadmin bypasses feature gates; expose all modules so the FE shows them.
 			loginResponse.setFeatures(new HashSet<>(Feature.KEYS));
 		}

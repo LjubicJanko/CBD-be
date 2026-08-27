@@ -62,7 +62,6 @@ public class OrderStatusHistory {
 	}
 
 	public OrderRecord getOrder() {
-		System.out.println("OrderRecord was lazily loaded!");
 		return order;
 	}
 

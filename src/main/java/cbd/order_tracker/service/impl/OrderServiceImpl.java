@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -111,29 +112,12 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public OrderDTO pauseOrder(Long id, String pausingComment) {
-		OrderRecord orderRecord = findOrderForCurrentTenant(id);
-		orderRecord.setExecutionStatus(OrderExecutionStatus.PAUSED);
-		orderRecord.setPausingComment(pausingComment);
-		orderRecord.addExecutionStatusHistory(OrderExecutionStatus.PAUSED, pausingComment);
-		orderRepository.save(orderRecord);
-
-		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-		Set<Role> roles = userUtil.getCurrentUserRoles();
-
-		return OrderMapper.toDto(orderRecord, history, roles);
+		return changeExecutionStatus(id, OrderExecutionStatus.PAUSED, pausingComment);
 	}
 
 	@Override
 	public OrderDTO reactivateOrder(Long id) {
-		OrderRecord orderRecord = findOrderForCurrentTenant(id);
-		orderRecord.setExecutionStatus(OrderExecutionStatus.ACTIVE);
-		orderRecord.addExecutionStatusHistory(OrderExecutionStatus.ACTIVE, null);
-		orderRepository.save(orderRecord);
-
-		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-		Set<Role> roles = userUtil.getCurrentUserRoles();
-
-		return OrderMapper.toDto(orderRecord, history, roles);
+		return changeExecutionStatus(id, OrderExecutionStatus.ACTIVE, null);
 	}
 
 	@Override
@@ -261,15 +245,19 @@ public class OrderServiceImpl implements OrderService {
 		Iterable<OrderRecord> orderRecords = (statuses != null && !statuses.isEmpty()) ?
 				orderRepository.findByStatusIn(statuses, tid) : orderRepository.findAllByTenant(tid);
 
-		List<OrderRecord> orderRecordList = StreamSupport.stream(orderRecords.spliterator(), false)
-				.toList();
+		List<OrderRecord> orderRecordList = StreamSupport.stream(orderRecords.spliterator(), false).toList();
+		if (orderRecordList.isEmpty()) {
+			return List.of();
+		}
+
+		List<Long> ids = orderRecordList.stream().map(OrderRecord::getId).toList();
+		Map<Long, List<OrderStatusHistory>> historyByOrder = statusHistoryRepository.findByOrderIdIn(ids)
+				.stream()
+				.collect(Collectors.groupingBy(h -> h.getOrder().getId()));
 
 		Set<Role> roles = userUtil.getCurrentUserRoles();
 		return orderRecordList.stream()
-				.map(orderRecord -> {
-					List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(orderRecord.getId());
-					return OrderMapper.toDto(orderRecord, history, roles);
-				})
+				.map(o -> OrderMapper.toDto(o, historyByOrder.getOrDefault(o.getId(), List.of()), roles))
 				.collect(Collectors.toList());
 	}
 

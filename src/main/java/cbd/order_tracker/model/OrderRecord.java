@@ -4,6 +4,7 @@ import cbd.order_tracker.model.dto.PaymentRequestDto;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.SQLRestriction;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -16,13 +17,14 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @SQLRestriction("deleted = false")
 public class OrderRecord {
 
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@EqualsAndHashCode.Include
 	private Long id;
 
 	private String name;

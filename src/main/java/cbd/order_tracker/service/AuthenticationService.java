@@ -4,12 +4,14 @@ import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.exceptions.RoleNotFoundException;
 import cbd.order_tracker.exceptions.TenantNotFoundException;
 import cbd.order_tracker.exceptions.UserNotFoundException;
+import cbd.order_tracker.model.Privilege;
 import cbd.order_tracker.model.Tenant;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.model.dto.ChangePasswordDto;
 import cbd.order_tracker.model.dto.LoginUserDto;
 import cbd.order_tracker.model.dto.RegisterUserDto;
 import cbd.order_tracker.model.dto.UserDto;
+import cbd.order_tracker.repository.PrivilegeRepository;
 import cbd.order_tracker.repository.RolesRepository;
 import cbd.order_tracker.repository.TenantRepository;
 import cbd.order_tracker.repository.UserRepository;
@@ -24,6 +26,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 public class AuthenticationService {
 	private final UserRepository userRepository;
@@ -31,19 +36,28 @@ public class AuthenticationService {
 	private final AuthenticationManager authenticationManager;
 	private final RolesRepository rolesRepository;
 	private final TenantRepository tenantRepository;
+	private final PrivilegeRepository privilegeRepository;
 
 	public AuthenticationService(
 			UserRepository userRepository,
 			AuthenticationManager authenticationManager,
 			PasswordEncoder passwordEncoder,
 			RolesRepository rolesRepository,
-			TenantRepository tenantRepository
+			TenantRepository tenantRepository,
+			PrivilegeRepository privilegeRepository
 	) {
 		this.authenticationManager = authenticationManager;
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.rolesRepository = rolesRepository;
 		this.tenantRepository = tenantRepository;
+		this.privilegeRepository = privilegeRepository;
+	}
+
+	public Set<String> getAllPrivilegeNames() {
+		return privilegeRepository.findAll().stream()
+				.map(Privilege::getName)
+				.collect(Collectors.toSet());
 	}
 
 	@Transactional

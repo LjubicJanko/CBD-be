@@ -1,5 +1,6 @@
 package cbd.order_tracker.util;
 
+import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatusHistory;
 import cbd.order_tracker.model.Role;
@@ -36,7 +37,7 @@ public class OrderMapper {
 
 	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history, Collection<Role> roles) {
 		OrderDTO dto = new OrderDTO();
-		boolean isAdmin = roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
+		boolean isAdmin = TenantContext.isSuperadmin() || roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
 
 		dto.setId(orderRecord.getId());
 		dto.setName(orderRecord.getName());
