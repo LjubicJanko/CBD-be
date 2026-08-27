@@ -3,6 +3,7 @@ package cbd.order_tracker.util;
 import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatusHistory;
+import cbd.order_tracker.model.Payment;
 import cbd.order_tracker.model.Role;
 import cbd.order_tracker.model.dto.OrderDTO;
 import cbd.order_tracker.model.dto.OrderOverviewDto;
@@ -36,6 +37,10 @@ public class OrderMapper {
 
 
 	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history, Collection<Role> roles) {
+		return toDto(orderRecord, history, roles, null);
+	}
+
+	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history, Collection<Role> roles, List<Payment> payments) {
 		OrderDTO dto = new OrderDTO();
 		boolean isAdmin = TenantContext.isSuperadmin() || roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
 
@@ -68,7 +73,10 @@ public class OrderMapper {
 			dto.setSalePriceWithTax(orderRecord.getSalePriceWithTax());
 			dto.setPriceDifference(priceDifference);
 			dto.setContactInfo(orderRecord.getContactInfo());
-//			dto.setPayments(orderRecord.getPayments());
+		}
+
+		if (payments != null) {
+			dto.setPayments(payments);
 		}
 
 		return dto;

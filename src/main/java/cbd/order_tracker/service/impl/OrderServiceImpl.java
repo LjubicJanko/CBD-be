@@ -209,8 +209,10 @@ public class OrderServiceImpl implements OrderService {
 	public OrderDTO getOrderById(Long id) {
 		OrderRecord orderRecord = findOrderForCurrentTenant(id);
 		Set<Role> roles = userUtil.getCurrentUserRoles();
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		List<Payment> payments = paymentRepository.findByOrderId(id);
 
-		return OrderMapper.toDto(orderRecord, new ArrayList<>(), roles);
+		return OrderMapper.toDto(orderRecord, history, roles, payments);
 	}
 
 	@Transactional(readOnly = true)
