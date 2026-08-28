@@ -25,6 +25,15 @@ public interface AttendanceSessionRepository extends JpaRepository<AttendanceSes
 	@Query("SELECT s FROM AttendanceSession s WHERE s.id = :id AND s.tenant.id = :tenantId")
 	Optional<AttendanceSession> findByIdAndTenant(@Param("id") Long id, @Param("tenantId") Long tenantId);
 
+	@Query("SELECT s.location.id AS locationId, COUNT(s) AS openCount FROM AttendanceSession s " +
+			"WHERE s.tenant.id = :tenantId AND s.checkOutAt IS NULL GROUP BY s.location.id")
+	List<OpenSessionCount> countOpenByLocationForTenant(@Param("tenantId") Long tenantId);
+
+	interface OpenSessionCount {
+		Long getLocationId();
+		Long getOpenCount();
+	}
+
 	@Query(
 		value =
 			"SELECT s FROM AttendanceSession s " +

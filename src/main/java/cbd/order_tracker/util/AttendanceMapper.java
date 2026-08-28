@@ -5,6 +5,7 @@ import cbd.order_tracker.model.WorkLocation;
 import cbd.order_tracker.model.dto.response.AttendanceSessionDto;
 import cbd.order_tracker.model.dto.response.CheckOutResponseDto;
 import cbd.order_tracker.model.dto.response.CurrentSessionDto;
+import cbd.order_tracker.model.dto.response.ScanResultDto;
 import cbd.order_tracker.model.dto.response.WorkLocationDto;
 
 import java.time.Duration;
@@ -21,6 +22,10 @@ public final class AttendanceMapper {
 	}
 
 	public static WorkLocationDto toDto(WorkLocation l) {
+		return toDto(l, false, null);
+	}
+
+	public static WorkLocationDto toDto(WorkLocation l, boolean includeAdminFields, Long openSessionCount) {
 		return new WorkLocationDto(
 				l.getId(),
 				l.getName(),
@@ -28,6 +33,9 @@ public final class AttendanceMapper {
 				l.getLng(),
 				l.getRadiusM(),
 				l.isActive(),
+				l.getCheckInMethod(),
+				includeAdminFields ? l.getQrToken() : null,
+				includeAdminFields ? openSessionCount : null,
 				toInstant(l.getCreatedAt()),
 				toInstant(l.getUpdatedAt())
 		);
@@ -81,6 +89,21 @@ public final class AttendanceMapper {
 				s.getCheckOutUserAgent(),
 				s.isAutoClosed(),
 				s.getNotes(),
+				duration
+		);
+	}
+
+	public static ScanResultDto toScanResultDto(AttendanceSession s, String action) {
+		Long duration = (s.getCheckInAt() != null && s.getCheckOutAt() != null)
+				? Duration.between(s.getCheckInAt(), s.getCheckOutAt()).getSeconds()
+				: null;
+		return new ScanResultDto(
+				action,
+				s.getId(),
+				s.getLocation().getId(),
+				s.getLocation().getName(),
+				toInstant(s.getCheckInAt()),
+				toInstant(s.getCheckOutAt()),
 				duration
 		);
 	}

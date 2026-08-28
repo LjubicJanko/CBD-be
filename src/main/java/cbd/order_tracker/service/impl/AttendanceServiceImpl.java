@@ -1,5 +1,6 @@
 package cbd.order_tracker.service.impl;
 
+import cbd.order_tracker.config.FeatureGuard;
 import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.exceptions.AttendanceDomainException;
 import cbd.order_tracker.exceptions.AttendanceDomainException.Reason;
@@ -7,6 +8,7 @@ import cbd.order_tracker.exceptions.TenantNotFoundException;
 import cbd.order_tracker.exceptions.UserNotFoundException;
 import cbd.order_tracker.model.AttendanceAuditLog;
 import cbd.order_tracker.model.AttendanceSession;
+import cbd.order_tracker.model.CheckInMethod;
 import cbd.order_tracker.model.Tenant;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.model.WorkLocation;
@@ -14,9 +16,13 @@ import cbd.order_tracker.model.dto.PageableResponse;
 import cbd.order_tracker.model.dto.request.AttendanceAdminCreateRequest;
 import cbd.order_tracker.model.dto.request.AttendanceAdminPatchRequest;
 import cbd.order_tracker.model.dto.request.AttendanceCheckRequest;
+import cbd.order_tracker.model.dto.request.AttendanceScanRequest;
 import cbd.order_tracker.model.dto.response.AttendanceSessionDto;
 import cbd.order_tracker.model.dto.response.CheckOutResponseDto;
 import cbd.order_tracker.model.dto.response.CurrentSessionDto;
+import cbd.order_tracker.model.dto.response.ScanLocationDto;
+import cbd.order_tracker.model.dto.response.ScanResultDto;
+import cbd.order_tracker.model.enums.Feature;
 import cbd.order_tracker.repository.AttendanceAuditLogRepository;
 import cbd.order_tracker.repository.AttendanceSessionRepository;
 import cbd.order_tracker.repository.TenantRepository;
@@ -29,6 +35,7 @@ import cbd.order_tracker.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -58,19 +65,22 @@ public class AttendanceServiceImpl implements AttendanceService {
 	private final AttendanceAuditLogRepository auditRepo;
 	private final TenantRepository tenantRepo;
 	private final UserRepository userRepo;
+	private final FeatureGuard featureGuard;
 
 	public AttendanceServiceImpl(
 			AttendanceSessionRepository sessionRepo,
 			WorkLocationRepository locationRepo,
 			AttendanceAuditLogRepository auditRepo,
 			TenantRepository tenantRepo,
-			UserRepository userRepo
+			UserRepository userRepo,
+			FeatureGuard featureGuard
 	) {
 		this.sessionRepo = sessionRepo;
 		this.locationRepo = locationRepo;
 		this.auditRepo = auditRepo;
 		this.tenantRepo = tenantRepo;
 		this.userRepo = userRepo;
+		this.featureGuard = featureGuard;
 	}
 
 	private Long tenantId() {
@@ -98,13 +108,14 @@ public class AttendanceServiceImpl implements AttendanceService {
 	// Used for check-out to prevent locking out a user whose check-in location was
 	// deactivated mid-shift.
 	WorkLocation matchGeofence(Long tid, BigDecimal lat, BigDecimal lng, WorkLocation alwaysInclude) {
-		List<WorkLocation> candidates = new ArrayList<>(locationRepo.findActiveByTenant(tid));
+		List<WorkLocation> candidates = new ArrayList<>(locationRepo.findActiveByTenantAndMethod(tid, CheckInMethod.GEOFENCE));
 		if (alwaysInclude != null && candidates.stream().noneMatch(l -> l.getId().equals(alwaysInclude.getId()))) {
 			candidates.add(alwaysInclude);
 		}
 		if (candidates.isEmpty()) {
 			throw new AttendanceDomainException(Reason.NO_ACTIVE_LOCATIONS,
-					"No active work locations configured for this tenant");
+					"No active geofence-based work locations configured for this tenant. " +
+					"If this tenant only has QR check-in locations, use the QR scan flow instead.");
 		}
 
 		WorkLocation best = null;
@@ -112,6 +123,12 @@ public class AttendanceServiceImpl implements AttendanceService {
 		double lat1 = lat.doubleValue();
 		double lng1 = lng.doubleValue();
 		for (WorkLocation loc : candidates) {
+			// alwaysInclude can be a QR location with no geofence data at all (e.g. checkout
+			// for a session that was opened via QR scan) — it can never match, skip rather
+			// than NPE on the null lat/lng/radiusM.
+			if (loc.getLat() == null || loc.getLng() == null || loc.getRadiusM() == null) {
+				continue;
+			}
 			double distance = haversineMeters(
 					lat1, lng1,
 					loc.getLat().doubleValue(), loc.getLng().doubleValue()
@@ -398,5 +415,80 @@ public class AttendanceServiceImpl implements AttendanceService {
 
 	private static LocalDateTime nowUtc() {
 		return LocalDateTime.now(ZoneOffset.UTC);
+	}
+
+	// --- QR check-in ---
+
+	@Override
+	@Transactional(readOnly = true)
+	public ScanLocationDto resolveScanLocation(String tenantSlug, String token) {
+		Tenant tenant = tenantRepo.findBySlug(tenantSlug.toLowerCase())
+				.filter(Tenant::isActive)
+				.orElseThrow(() -> new ResourceNotFound("Not found"));
+		// Masked as the same 404 as "no such tenant" — this is a public, unauthenticated
+		// endpoint, so a distinct 403 here would let an attacker enumerate valid tenant slugs
+		// by status code alone.
+		try {
+			featureGuard.requireFeature(tenant, Feature.ATTENDANCE.getKey());
+		} catch (AccessDeniedException e) {
+			throw new ResourceNotFound("Not found");
+		}
+
+		WorkLocation loc = locationRepo.findByQrTokenAndTenant(token, tenant.getId())
+				.filter(l -> l.getCheckInMethod() == CheckInMethod.QR && l.isActive())
+				.orElseThrow(() -> new ResourceNotFound("Not found"));
+		return new ScanLocationDto(loc.getName());
+	}
+
+	// Toggle: scanning a QR check-in/out is a single action from the user's point of view.
+	// No geofence check here — physical possession of the printed code is the proof of
+	// presence; GPS is recorded only if the client managed to get a fix (audit-only).
+	@Override
+	@Transactional
+	public ScanResultDto scan(String token, AttendanceScanRequest req, String ip, String userAgent) {
+		Long tid = tenantId();
+		User user = currentUser();
+
+		Optional<AttendanceSession> open = sessionRepo.findOpenForUser(tid, user.getId());
+
+		// Active is required to start a new session, but a check-out must still work even if
+		// the location was deactivated mid-shift — otherwise the user can never scan out again
+		// (mirrors the alwaysInclude handling in matchGeofence for the same problem).
+		WorkLocation loc = locationRepo.findByQrTokenAndTenant(token, tid)
+				.filter(l -> l.getCheckInMethod() == CheckInMethod.QR && (l.isActive() || open.isPresent()))
+				.orElseThrow(() -> new ResourceNotFound("QR code not recognized"));
+		if (open.isEmpty()) {
+			Tenant tenant = tenantRepo.findById(tid)
+					.orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
+
+			AttendanceSession s = new AttendanceSession();
+			s.setTenant(tenant);
+			s.setUser(user);
+			s.setLocation(loc);
+			s.setCheckInAt(nowUtc());
+			s.setCheckInLat(req.getLat());
+			s.setCheckInLng(req.getLng());
+			s.setCheckInAccuracyM(req.getAccuracy());
+			s.setCheckInIp(ip);
+			s.setCheckInUserAgent(truncate(userAgent, 500));
+
+			try {
+				s = sessionRepo.saveAndFlush(s);
+			} catch (DataIntegrityViolationException e) {
+				throw new AttendanceDomainException(Reason.ALREADY_CHECKED_IN,
+						"You already have an open attendance session");
+			}
+			return AttendanceMapper.toScanResultDto(s, "CHECK_IN");
+		}
+
+		AttendanceSession s = open.get();
+		s.setCheckOutAt(nowUtc());
+		s.setCheckOutLat(req.getLat());
+		s.setCheckOutLng(req.getLng());
+		s.setCheckOutAccuracyM(req.getAccuracy());
+		s.setCheckOutIp(ip);
+		s.setCheckOutUserAgent(truncate(userAgent, 500));
+		s = sessionRepo.save(s);
+		return AttendanceMapper.toScanResultDto(s, "CHECK_OUT");
 	}
 }

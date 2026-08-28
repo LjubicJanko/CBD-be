@@ -15,6 +15,20 @@ public enum Feature {
 	ORDER_EXTENSION("order-extension"),
 	BANNERS("banners"),
 	ATTENDANCE("attendance"),
+	// Sub-feature of ATTENDANCE — gates the *ability to configure* GPS/geofence check-in
+	// locations (create one, or switch an existing location to GEOFENCE). QR is the
+	// default, always-on check-in method under the base ATTENDANCE feature; geofence is
+	// the opt-in beta path, being the more failure-prone of the two (permission prompts,
+	// spoofable via mock-location apps, device accuracy variance). Does NOT gate an
+	// already-configured geofence location: it must keep working even if this is later
+	// disabled — see WorkLocationServiceImpl.requireGeofenceFeatureEnabled for why the
+	// check fires on *requesting* the switch, not on the location's resolved state.
+	// Enforcement lives in WorkLocationServiceImpl, not the URL-prefix interceptor, since
+	// it gates a field value, not a whole endpoint. Not backend-enforced as depending on
+	// ATTENDANCE (no feature-dependency validation exists in this codebase today — see
+	// PlatformServiceImpl.applyFeatures) so treat that pairing as FE-form-only, same as
+	// ORDER_EXTENSION/ORDERS.
+	ATTENDANCE_GEOFENCE("attendance-geofence"),
 	REPORTS("reports"),
 	THEMING("theming");
 

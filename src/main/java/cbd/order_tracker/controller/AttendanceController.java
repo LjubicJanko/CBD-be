@@ -4,9 +4,12 @@ import cbd.order_tracker.model.dto.PageableResponse;
 import cbd.order_tracker.model.dto.request.AttendanceAdminCreateRequest;
 import cbd.order_tracker.model.dto.request.AttendanceAdminPatchRequest;
 import cbd.order_tracker.model.dto.request.AttendanceCheckRequest;
+import cbd.order_tracker.model.dto.request.AttendanceScanRequest;
 import cbd.order_tracker.model.dto.response.AttendanceSessionDto;
 import cbd.order_tracker.model.dto.response.CheckOutResponseDto;
 import cbd.order_tracker.model.dto.response.CurrentSessionDto;
+import cbd.order_tracker.model.dto.response.ScanLocationDto;
+import cbd.order_tracker.model.dto.response.ScanResultDto;
 import cbd.order_tracker.service.AttendanceService;
 import cbd.order_tracker.util.RequestMetadataUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +28,32 @@ import java.time.LocalDate;
 public class AttendanceController {
 
 	private final AttendanceService attendanceService;
+
+	// Public: QR landing page, resolved before login. Path shape (two segments after
+	// /scan/) is what keeps this out of FeatureEnforcementInterceptor's authenticated gate
+	// and out of Spring Security's auth requirement — see both configs before changing this.
+	// Tenant resolution and the feature check both happen inside resolveScanLocation, so they
+	// aren't duplicated here.
+	@GetMapping("/scan/{tenantSlug}/{token}")
+	public ResponseEntity<ScanLocationDto> scanInfo(@PathVariable String tenantSlug, @PathVariable String token) {
+		return ResponseEntity.ok(attendanceService.resolveScanLocation(tenantSlug, token));
+	}
+
+	@PreAuthorize("hasAuthority('attendance-check-in')")
+	@PostMapping("/scan/{token}")
+	public ResponseEntity<ScanResultDto> scan(
+			@PathVariable String token,
+			@Valid @RequestBody AttendanceScanRequest req,
+			HttpServletRequest httpReq
+	) {
+		ScanResultDto dto = attendanceService.scan(
+				token,
+				req,
+				RequestMetadataUtil.clientIp(httpReq),
+				RequestMetadataUtil.userAgent(httpReq)
+		);
+		return ResponseEntity.ok(dto);
+	}
 
 	@PreAuthorize("hasAuthority('attendance-check-in')")
 	@PostMapping("/check-in")

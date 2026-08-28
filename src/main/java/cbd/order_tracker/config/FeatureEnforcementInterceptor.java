@@ -16,9 +16,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * inside their controllers); they call {@link FeatureGuard} directly:
  * <ul>
  *   <li>{@code /api/orderExtend/**} and {@code /api/orders/track/**} -> order-extension</li>
+ *   <li>{@code /api/attendance/scan/{tenantSlug}/{token}} (GET, two segments) -> attendance</li>
  * </ul>
- * Those two prefixes are therefore excluded below so this interceptor never
- * 403s a tenant-less public request.
+ * Those prefixes are therefore excluded below so this interceptor never 403s a
+ * tenant-less public request. Note the QR scan POST ({@code /api/attendance/scan/{token}},
+ * one segment) is NOT public and must keep falling through to the ATTENDANCE gate below.
  */
 @RequiredArgsConstructor
 public class FeatureEnforcementInterceptor implements HandlerInterceptor {
@@ -51,6 +53,13 @@ public class FeatureEnforcementInterceptor implements HandlerInterceptor {
 		}
 		if (path.startsWith("/api/banners/")) {
 			return Feature.BANNERS.getKey();
+		}
+		if (path.startsWith("/api/attendance/scan/")) {
+			String rest = path.substring("/api/attendance/scan/".length());
+			if (rest.contains("/")) {
+				return null; // public GET /api/attendance/scan/{tenantSlug}/{token}
+			}
+			// else: POST /api/attendance/scan/{token} — authenticated, falls through below
 		}
 		if (path.startsWith("/api/attendance") || path.startsWith("/api/locations")) {
 			return Feature.ATTENDANCE.getKey();

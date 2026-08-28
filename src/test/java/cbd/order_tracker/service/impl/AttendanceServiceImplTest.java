@@ -1,15 +1,21 @@
 package cbd.order_tracker.service.impl;
 
+import cbd.order_tracker.config.FeatureGuard;
 import cbd.order_tracker.config.TenantContext;
 import cbd.order_tracker.exceptions.AttendanceDomainException;
 import cbd.order_tracker.exceptions.AttendanceDomainException.Reason;
 import cbd.order_tracker.model.AttendanceSession;
+import cbd.order_tracker.model.CheckInMethod;
 import cbd.order_tracker.model.Tenant;
 import cbd.order_tracker.model.User;
 import cbd.order_tracker.model.WorkLocation;
 import cbd.order_tracker.model.dto.request.AttendanceCheckRequest;
+import cbd.order_tracker.model.dto.request.AttendanceScanRequest;
 import cbd.order_tracker.model.dto.response.CheckOutResponseDto;
 import cbd.order_tracker.model.dto.response.CurrentSessionDto;
+import cbd.order_tracker.model.dto.response.ScanLocationDto;
+import cbd.order_tracker.model.dto.response.ScanResultDto;
+import cbd.order_tracker.util.ResourceNotFound;
 import cbd.order_tracker.repository.AttendanceAuditLogRepository;
 import cbd.order_tracker.repository.AttendanceSessionRepository;
 import cbd.order_tracker.repository.TenantRepository;
@@ -55,6 +61,7 @@ class AttendanceServiceImplTest {
 	private AttendanceAuditLogRepository auditRepo;
 	private TenantRepository tenantRepo;
 	private UserRepository userRepo;
+	private FeatureGuard featureGuard;
 
 	private AttendanceServiceImpl service;
 	private Tenant tenant;
@@ -67,7 +74,8 @@ class AttendanceServiceImplTest {
 		auditRepo = mock(AttendanceAuditLogRepository.class);
 		tenantRepo = mock(TenantRepository.class);
 		userRepo = mock(UserRepository.class);
-		service = new AttendanceServiceImpl(sessionRepo, locationRepo, auditRepo, tenantRepo, userRepo);
+		featureGuard = mock(FeatureGuard.class);
+		service = new AttendanceServiceImpl(sessionRepo, locationRepo, auditRepo, tenantRepo, userRepo, featureGuard);
 
 		tenant = new Tenant("CBD", "cbd");
 		tenant.setId(TENANT_ID);
@@ -143,7 +151,7 @@ class AttendanceServiceImplTest {
 		double centerLat = 44.787197;
 		double centerLng = 20.457273;
 		WorkLocation loc = location(1L, "HQ", centerLat, centerLng, radius);
-		when(locationRepo.findActiveByTenant(TENANT_ID)).thenReturn(List.of(loc));
+		when(locationRepo.findActiveByTenantAndMethod(TENANT_ID, CheckInMethod.GEOFENCE)).thenReturn(List.of(loc));
 		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
 
 		double[] coords = northOf(centerLat, centerLng, distance);
@@ -162,7 +170,7 @@ class AttendanceServiceImplTest {
 	@Test
 	void checkIn_doubleCheckIn_returnsAlreadyCheckedIn() {
 		WorkLocation loc = location(1L, "HQ", 44.787197, 20.457273, 100);
-		when(locationRepo.findActiveByTenant(TENANT_ID)).thenReturn(List.of(loc));
+		when(locationRepo.findActiveByTenantAndMethod(TENANT_ID, CheckInMethod.GEOFENCE)).thenReturn(List.of(loc));
 
 		AttendanceSession open = new AttendanceSession();
 		open.setId(7L);
@@ -186,7 +194,7 @@ class AttendanceServiceImplTest {
 
 	@Test
 	void checkIn_noActiveLocations_returnsNoActiveLocations() {
-		when(locationRepo.findActiveByTenant(TENANT_ID)).thenReturn(List.of());
+		when(locationRepo.findActiveByTenantAndMethod(TENANT_ID, CheckInMethod.GEOFENCE)).thenReturn(List.of());
 		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> service.checkIn(req(44.787197, 20.457273, 5), "ip", "ua"))
@@ -203,7 +211,7 @@ class AttendanceServiceImplTest {
 		double[] far = northOf(centerLat, centerLng, 40); // 40m north of user
 		WorkLocation farLoc = location(2L, "Far", far[0], far[1], 200);
 
-		when(locationRepo.findActiveByTenant(TENANT_ID)).thenReturn(List.of(farLoc, closeLoc));
+		when(locationRepo.findActiveByTenantAndMethod(TENANT_ID, CheckInMethod.GEOFENCE)).thenReturn(List.of(farLoc, closeLoc));
 		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
 
 		CurrentSessionDto dto = service.checkIn(req(centerLat, centerLng, 5), "ip", "ua");
@@ -214,7 +222,7 @@ class AttendanceServiceImplTest {
 	@Test
 	void checkIn_concurrentRace_duplicateKey_returnsAlreadyCheckedIn() {
 		WorkLocation loc = location(1L, "HQ", 44.787197, 20.457273, 100);
-		when(locationRepo.findActiveByTenant(TENANT_ID)).thenReturn(List.of(loc));
+		when(locationRepo.findActiveByTenantAndMethod(TENANT_ID, CheckInMethod.GEOFENCE)).thenReturn(List.of(loc));
 		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
 		when(sessionRepo.saveAndFlush(any(AttendanceSession.class)))
 				.thenThrow(new DataIntegrityViolationException("unique constraint"));
@@ -227,7 +235,7 @@ class AttendanceServiceImplTest {
 	@Test
 	void checkIn_persistsIpAndUserAgentAndLocation() {
 		WorkLocation loc = location(1L, "HQ", 44.787197, 20.457273, 100);
-		when(locationRepo.findActiveByTenant(TENANT_ID)).thenReturn(List.of(loc));
+		when(locationRepo.findActiveByTenantAndMethod(TENANT_ID, CheckInMethod.GEOFENCE)).thenReturn(List.of(loc));
 		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
 
 		service.checkIn(req(44.787197, 20.457273, 12), "10.0.0.1", "Mozilla/5.0");
@@ -246,7 +254,7 @@ class AttendanceServiceImplTest {
 	@Test
 	void checkOut_completesSession_andReturnsDuration() {
 		WorkLocation loc = location(1L, "HQ", 44.787197, 20.457273, 100);
-		when(locationRepo.findActiveByTenant(TENANT_ID)).thenReturn(List.of(loc));
+		when(locationRepo.findActiveByTenantAndMethod(TENANT_ID, CheckInMethod.GEOFENCE)).thenReturn(List.of(loc));
 
 		AttendanceSession open = new AttendanceSession();
 		open.setId(7L);
@@ -261,6 +269,27 @@ class AttendanceServiceImplTest {
 		assertThat(dto.getId()).isEqualTo(7L);
 		assertThat(dto.getCheckOutAt()).isNotNull();
 		assertThat(dto.getDurationSeconds()).isGreaterThanOrEqualTo(7100L);
+	}
+
+	@Test
+	void checkOut_sessionOpenedViaQr_geofenceLocationWithNullFieldsDoesNotThrowNpe() {
+		// Mixed-mode tenant: no active GEOFENCE locations, but the session's own location
+		// (forced into the candidate pool via alwaysInclude) is a QR location with no lat/
+		// lng/radiusM at all. Must fail cleanly with OUT_OF_GEOFENCE, not NPE.
+		when(locationRepo.findActiveByTenantAndMethod(TENANT_ID, CheckInMethod.GEOFENCE)).thenReturn(List.of());
+
+		WorkLocation qrLoc = qrLocation(9L, "Warehouse", "tok-9");
+		AttendanceSession open = new AttendanceSession();
+		open.setId(7L);
+		open.setTenant(tenant);
+		open.setUser(user);
+		open.setLocation(qrLoc);
+		open.setCheckInAt(LocalDateTime.now(ZoneOffset.UTC).minusHours(1));
+		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.of(open));
+
+		assertThatThrownBy(() -> service.checkOut(req(44.787197, 20.457273, 10), "ip", "ua"))
+				.isInstanceOf(AttendanceDomainException.class)
+				.hasFieldOrPropertyWithValue("reason", Reason.OUT_OF_GEOFENCE);
 	}
 
 	@Test
@@ -297,12 +326,184 @@ class AttendanceServiceImplTest {
 		// so a user from tenant A cannot read sessions or locations belonging to tenant B.
 		// We validate that the parameter actually reaches the repository.
 		when(sessionRepo.findOpenForUser(anyLong(), any(Integer.class))).thenReturn(Optional.empty());
-		when(locationRepo.findActiveByTenant(anyLong())).thenReturn(List.of());
+		when(locationRepo.findActiveByTenantAndMethod(anyLong(), eq(CheckInMethod.GEOFENCE))).thenReturn(List.of());
 
 		assertThatThrownBy(() -> service.checkIn(req(44.787197, 20.457273, 5), "ip", "ua"))
 				.isInstanceOf(AttendanceDomainException.class);
 
 		verify(sessionRepo).findOpenForUser(eq(TENANT_ID), eq(USER_ID));
-		verify(locationRepo).findActiveByTenant(eq(TENANT_ID));
+		verify(locationRepo).findActiveByTenantAndMethod(eq(TENANT_ID), eq(CheckInMethod.GEOFENCE));
+	}
+
+	// === QR scan ===
+
+	private WorkLocation qrLocation(long id, String name, String token) {
+		WorkLocation loc = new WorkLocation();
+		loc.setId(id);
+		loc.setTenant(tenant);
+		loc.setName(name);
+		loc.setCheckInMethod(CheckInMethod.QR);
+		loc.setQrToken(token);
+		loc.setActive(true);
+		return loc;
+	}
+
+	private AttendanceScanRequest scanReq(Double lat, Double lng, Integer accuracy) {
+		AttendanceScanRequest r = new AttendanceScanRequest();
+		r.setLat(lat == null ? null : BigDecimal.valueOf(lat).setScale(6, RoundingMode.HALF_UP));
+		r.setLng(lng == null ? null : BigDecimal.valueOf(lng).setScale(6, RoundingMode.HALF_UP));
+		r.setAccuracy(accuracy);
+		return r;
+	}
+
+	@Test
+	void resolveScanLocation_validToken_returnsLocationName() {
+		when(tenantRepo.findBySlug("cbd")).thenReturn(Optional.of(tenant));
+		when(locationRepo.findByQrTokenAndTenant("tok-1", TENANT_ID))
+				.thenReturn(Optional.of(qrLocation(1L, "Warehouse", "tok-1")));
+
+		ScanLocationDto dto = service.resolveScanLocation("cbd", "tok-1");
+
+		assertThat(dto.getLocationName()).isEqualTo("Warehouse");
+	}
+
+	@Test
+	void resolveScanLocation_unknownTenantSlug_throwsResourceNotFound() {
+		when(tenantRepo.findBySlug("nope")).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.resolveScanLocation("nope", "tok-1"))
+				.isInstanceOf(ResourceNotFound.class);
+	}
+
+	@Test
+	void resolveScanLocation_unknownToken_throwsResourceNotFound() {
+		when(tenantRepo.findBySlug("cbd")).thenReturn(Optional.of(tenant));
+		when(locationRepo.findByQrTokenAndTenant("bad-token", TENANT_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.resolveScanLocation("cbd", "bad-token"))
+				.isInstanceOf(ResourceNotFound.class);
+	}
+
+	@Test
+	void resolveScanLocation_geofenceLocationWithMatchingToken_isNotResolvable() {
+		// Defense in depth: even if a token somehow matched a non-QR location, it must not resolve.
+		when(tenantRepo.findBySlug("cbd")).thenReturn(Optional.of(tenant));
+		WorkLocation geofenceLoc = qrLocation(1L, "HQ", "tok-1");
+		geofenceLoc.setCheckInMethod(CheckInMethod.GEOFENCE);
+		when(locationRepo.findByQrTokenAndTenant("tok-1", TENANT_ID)).thenReturn(Optional.of(geofenceLoc));
+
+		assertThatThrownBy(() -> service.resolveScanLocation("cbd", "tok-1"))
+				.isInstanceOf(ResourceNotFound.class);
+	}
+
+	@Test
+	void scan_noOpenSession_checksInAtScannedLocation_gpsOptional() {
+		WorkLocation loc = qrLocation(1L, "Warehouse", "tok-1");
+		when(locationRepo.findByQrTokenAndTenant("tok-1", TENANT_ID)).thenReturn(Optional.of(loc));
+		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
+
+		ScanResultDto dto = service.scan("tok-1", scanReq(null, null, null), "1.1.1.1", "ua");
+
+		assertThat(dto.getAction()).isEqualTo("CHECK_IN");
+		assertThat(dto.getLocationId()).isEqualTo(1L);
+
+		ArgumentCaptor<AttendanceSession> cap = ArgumentCaptor.forClass(AttendanceSession.class);
+		verify(sessionRepo).saveAndFlush(cap.capture());
+		AttendanceSession saved = cap.getValue();
+		assertThat(saved.getCheckInLat()).isNull();
+		assertThat(saved.getCheckInLng()).isNull();
+		assertThat(saved.getLocation().getId()).isEqualTo(1L);
+	}
+
+	@Test
+	void scan_noOpenSession_checksIn_recordsGpsWhenProvided() {
+		WorkLocation loc = qrLocation(1L, "Warehouse", "tok-1");
+		when(locationRepo.findByQrTokenAndTenant("tok-1", TENANT_ID)).thenReturn(Optional.of(loc));
+		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
+
+		service.scan("tok-1", scanReq(44.787197, 20.457273, 12), "1.1.1.1", "ua");
+
+		ArgumentCaptor<AttendanceSession> cap = ArgumentCaptor.forClass(AttendanceSession.class);
+		verify(sessionRepo).saveAndFlush(cap.capture());
+		assertThat(cap.getValue().getCheckInLat()).isNotNull();
+		assertThat(cap.getValue().getCheckInAccuracyM()).isEqualTo(12);
+	}
+
+	@Test
+	void scan_hasOpenSession_checksOut_regardlessOfWhichLocationScanned() {
+		WorkLocation checkInLoc = qrLocation(1L, "Warehouse", "tok-1");
+		WorkLocation otherLoc = qrLocation(2L, "Storefront", "tok-2");
+
+		AttendanceSession open = new AttendanceSession();
+		open.setId(7L);
+		open.setTenant(tenant);
+		open.setUser(user);
+		open.setLocation(checkInLoc);
+		open.setCheckInAt(LocalDateTime.now(ZoneOffset.UTC).minusHours(1));
+
+		when(locationRepo.findByQrTokenAndTenant("tok-2", TENANT_ID)).thenReturn(Optional.of(otherLoc));
+		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.of(open));
+
+		ScanResultDto dto = service.scan("tok-2", scanReq(null, null, null), "1.1.1.1", "ua");
+
+		assertThat(dto.getAction()).isEqualTo("CHECK_OUT");
+		assertThat(dto.getSessionId()).isEqualTo(7L);
+		assertThat(open.getCheckOutAt()).isNotNull();
+		verify(sessionRepo).save(open);
+		verify(sessionRepo, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void scan_deactivatedLocation_withOpenSession_stillChecksOut() {
+		WorkLocation loc = qrLocation(1L, "Warehouse", "tok-1");
+		loc.setActive(false);
+
+		AttendanceSession open = new AttendanceSession();
+		open.setId(7L);
+		open.setTenant(tenant);
+		open.setUser(user);
+		open.setLocation(loc);
+		open.setCheckInAt(LocalDateTime.now(ZoneOffset.UTC).minusHours(1));
+
+		when(locationRepo.findByQrTokenAndTenant("tok-1", TENANT_ID)).thenReturn(Optional.of(loc));
+		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.of(open));
+
+		ScanResultDto dto = service.scan("tok-1", scanReq(null, null, null), "1.1.1.1", "ua");
+
+		assertThat(dto.getAction()).isEqualTo("CHECK_OUT");
+		assertThat(open.getCheckOutAt()).isNotNull();
+	}
+
+	@Test
+	void scan_deactivatedLocation_noOpenSession_cannotCheckIn() {
+		WorkLocation loc = qrLocation(1L, "Warehouse", "tok-1");
+		loc.setActive(false);
+
+		when(locationRepo.findByQrTokenAndTenant("tok-1", TENANT_ID)).thenReturn(Optional.of(loc));
+		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.scan("tok-1", scanReq(null, null, null), "1.1.1.1", "ua"))
+				.isInstanceOf(ResourceNotFound.class);
+	}
+
+	@Test
+	void scan_unknownToken_throwsResourceNotFound() {
+		when(locationRepo.findByQrTokenAndTenant("bad-token", TENANT_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.scan("bad-token", scanReq(null, null, null), "ip", "ua"))
+				.isInstanceOf(ResourceNotFound.class);
+	}
+
+	@Test
+	void scan_concurrentRace_duplicateKey_returnsAlreadyCheckedIn() {
+		WorkLocation loc = qrLocation(1L, "Warehouse", "tok-1");
+		when(locationRepo.findByQrTokenAndTenant("tok-1", TENANT_ID)).thenReturn(Optional.of(loc));
+		when(sessionRepo.findOpenForUser(TENANT_ID, USER_ID)).thenReturn(Optional.empty());
+		when(sessionRepo.saveAndFlush(any(AttendanceSession.class)))
+				.thenThrow(new DataIntegrityViolationException("unique constraint"));
+
+		assertThatThrownBy(() -> service.scan("tok-1", scanReq(null, null, null), "ip", "ua"))
+				.isInstanceOf(AttendanceDomainException.class)
+				.hasFieldOrPropertyWithValue("reason", Reason.ALREADY_CHECKED_IN);
 	}
 }

@@ -34,17 +34,30 @@ public class WorkLocation {
 	@Column(nullable = false, length = 120)
 	private String name;
 
-	@Column(nullable = false, precision = 9, scale = 6)
+	// Required for GEOFENCE locations; unused (nullable) for QR locations.
+	@Column(precision = 9, scale = 6)
 	private BigDecimal lat;
 
-	@Column(nullable = false, precision = 9, scale = 6)
+	@Column(precision = 9, scale = 6)
 	private BigDecimal lng;
 
-	@Column(name = "radius_m", nullable = false)
+	@Column(name = "radius_m")
 	private Integer radiusM;
 
 	@Column(nullable = false)
 	private boolean active = true;
+
+	// Nullable at the JPA/DDL level so Hibernate's ddl-auto=update never attempts a NOT NULL
+	// column add on a populated table (unsafe under MySQL strict mode without a DEFAULT).
+	// WorkLocationSchemaInitializer backfills and tightens this to NOT NULL explicitly.
+	// New in-memory instances still always get GEOFENCE via the Java default below.
+	@Column(name = "check_in_method", length = 20)
+	@Enumerated(EnumType.STRING)
+	private CheckInMethod checkInMethod = CheckInMethod.GEOFENCE;
+
+	// Required for QR locations (server-generated); unused for GEOFENCE locations.
+	@Column(name = "qr_token", unique = true, length = 32)
+	private String qrToken;
 
 	@CreationTimestamp
 	@Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3)")

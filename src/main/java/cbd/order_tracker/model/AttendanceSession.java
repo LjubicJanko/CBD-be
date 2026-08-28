@@ -43,13 +43,14 @@ public class AttendanceSession {
 	@Column(name = "check_in_at", nullable = false, columnDefinition = "DATETIME(3)")
 	private LocalDateTime checkInAt;
 
-	@Column(name = "check_in_lat", nullable = false, precision = 9, scale = 6)
+	// Required for geofence-gated check-ins; optional/audit-only for QR-based check-ins.
+	@Column(name = "check_in_lat", precision = 9, scale = 6)
 	private BigDecimal checkInLat;
 
-	@Column(name = "check_in_lng", nullable = false, precision = 9, scale = 6)
+	@Column(name = "check_in_lng", precision = 9, scale = 6)
 	private BigDecimal checkInLng;
 
-	@Column(name = "check_in_accuracy_m", nullable = false)
+	@Column(name = "check_in_accuracy_m")
 	private Integer checkInAccuracyM;
 
 	@Column(name = "check_in_ip", length = 45)

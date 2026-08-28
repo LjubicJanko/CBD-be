@@ -4,9 +4,12 @@ import cbd.order_tracker.model.dto.PageableResponse;
 import cbd.order_tracker.model.dto.request.AttendanceAdminCreateRequest;
 import cbd.order_tracker.model.dto.request.AttendanceAdminPatchRequest;
 import cbd.order_tracker.model.dto.request.AttendanceCheckRequest;
+import cbd.order_tracker.model.dto.request.AttendanceScanRequest;
 import cbd.order_tracker.model.dto.response.AttendanceSessionDto;
 import cbd.order_tracker.model.dto.response.CheckOutResponseDto;
 import cbd.order_tracker.model.dto.response.CurrentSessionDto;
+import cbd.order_tracker.model.dto.response.ScanLocationDto;
+import cbd.order_tracker.model.dto.response.ScanResultDto;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -16,6 +19,10 @@ public interface AttendanceService {
 	CurrentSessionDto checkIn(AttendanceCheckRequest req, String ip, String userAgent);
 
 	CheckOutResponseDto checkOut(AttendanceCheckRequest req, String ip, String userAgent);
+
+	ScanLocationDto resolveScanLocation(String tenantSlug, String token);
+
+	ScanResultDto scan(String token, AttendanceScanRequest req, String ip, String userAgent);
 
 	Optional<CurrentSessionDto> currentForUser();
 

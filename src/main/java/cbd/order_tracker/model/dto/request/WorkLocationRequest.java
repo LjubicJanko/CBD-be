@@ -1,5 +1,6 @@
 package cbd.order_tracker.model.dto.request;
 
+import cbd.order_tracker.model.CheckInMethod;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -19,16 +20,18 @@ public class WorkLocationRequest {
 	private String name;
 
 	@NotNull
+	private CheckInMethod checkInMethod;
+
+	// Required when checkInMethod = GEOFENCE; ignored for QR (validated in the service,
+	// since the requirement is conditional on checkInMethod).
 	@DecimalMin(value = "-90.0")
 	@DecimalMax(value = "90.0")
 	private BigDecimal lat;
 
-	@NotNull
 	@DecimalMin(value = "-180.0")
 	@DecimalMax(value = "180.0")
 	private BigDecimal lng;
 
-	@NotNull
 	@Min(10)
 	@Max(5000)
 	private Integer radiusM;

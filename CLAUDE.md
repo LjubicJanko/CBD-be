@@ -28,7 +28,7 @@ docker run -p 8080:8080 cbd-order-tracker
 
 - JWT-based (jjwt 0.11.5), stateless sessions
 - BCrypt password encoding
-- Public endpoints: `/api/auth/**`, `/api/orderExtend/**`, `/api/orders/track/**`, `/api/banners/active/**`
+- Public endpoints: `/api/auth/**`, `/api/orderExtend/**`, `/api/orders/track/**`, `/api/banners/active/**`, `/api/public/**`, `/api/attendance/scan/{tenantSlug}/{token}` (GET only — the two-segment shape distinguishes it from the authenticated `POST /api/attendance/scan/{token}`)
 - All other endpoints require `Authorization: Bearer <token>` header
 
 ## Roles & Privileges

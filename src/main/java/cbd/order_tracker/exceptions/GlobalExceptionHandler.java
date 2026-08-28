@@ -1,5 +1,6 @@
 package cbd.order_tracker.exceptions;
 
+import cbd.order_tracker.util.ResourceNotFound;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.stream.Collectors;
 
@@ -26,7 +28,8 @@ public class GlobalExceptionHandler {
 			RoleNotFoundException.class,
 			UserNotFoundException.class,
 			BannerNotFoundException.class,
-			PaymentNotFoundException.class
+			PaymentNotFoundException.class,
+			ResourceNotFound.class
 	})
 	public ProblemDetail handleNotFound(RuntimeException exception) {
 		ProblemDetail errorDetail = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(404), exception.getMessage());
@@ -60,6 +63,13 @@ public class GlobalExceptionHandler {
 		ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(422), ex.getMessage());
 		pd.setProperty("reason", ex.getReason().code());
 		return pd;
+	}
+
+	@ExceptionHandler(ResponseStatusException.class)
+	public ProblemDetail handleResponseStatusException(ResponseStatusException exception) {
+		ProblemDetail errorDetail = ProblemDetail.forStatusAndDetail(exception.getStatusCode(), exception.getReason());
+		errorDetail.setProperty("description", exception.getReason());
+		return errorDetail;
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

@@ -9,10 +9,16 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Idempotent structural setup for the QR check-in feature on work_locations.
+ * Same rationale as {@link AttendanceSchemaInitializer}: ddl-auto=update adds
+ * missing columns but won't reliably relax NOT NULL on a populated table or
+ * add a unique index, so those steps are done explicitly here.
+ */
 @Slf4j
 @Component
-@Order(50)
-public class AttendanceSchemaInitializer implements ApplicationRunner {
+@Order(60)
+public class WorkLocationSchemaInitializer implements ApplicationRunner {
 
 	@PersistenceContext
 	private EntityManager em;
@@ -20,48 +26,52 @@ public class AttendanceSchemaInitializer implements ApplicationRunner {
 	@Override
 	@Transactional
 	public void run(ApplicationArguments args) {
-		if (!tableExists("attendance_sessions")) {
-			// Hibernate hasn't created the table yet (e.g., ddl-auto=none in some envs);
-			// nothing to do — operator must run the migration SQL.
-			log.warn("attendance_sessions table does not exist; skipping generated-column setup");
+		if (!tableExists("work_locations")) {
+			log.warn("work_locations table does not exist; skipping QR check-in column setup");
 			return;
 		}
 
-		// Add the generated "open_user_id" column that is non-null only while the session is open.
-		// A unique index on (tenant_id, open_user_id) then enforces "at most one open session per
-		// user per tenant" — MySQL's substitute for Postgres partial unique indexes.
-		// Requires MySQL 8.0.13+.
-		if (!columnExists("attendance_sessions", "open_user_id")) {
+		// check_in_method: the entity maps this column as nullable (see WorkLocation) so
+		// Hibernate only ever adds it as NULL — safe on a populated table. We then backfill
+		// and tighten to NOT NULL ourselves, in explicit, dependency-free steps.
+		if (!columnExists("work_locations", "check_in_method")) {
 			em.createNativeQuery(
-					"ALTER TABLE attendance_sessions " +
-					"ADD COLUMN open_user_id INT AS (CASE WHEN check_out_at IS NULL THEN user_id END) STORED"
+					"ALTER TABLE work_locations ADD COLUMN check_in_method VARCHAR(20) NULL"
 			).executeUpdate();
-			log.info("Added generated column attendance_sessions.open_user_id");
+			log.info("Added work_locations.check_in_method (nullable)");
 		}
-
-		if (!indexExists("attendance_sessions", "uq_attendance_open_session")) {
+		int backfilled = em.createNativeQuery(
+				"UPDATE work_locations SET check_in_method = 'GEOFENCE' WHERE check_in_method IS NULL"
+		).executeUpdate();
+		if (backfilled > 0) {
+			log.info("Backfilled check_in_method = GEOFENCE for {} existing work_locations rows", backfilled);
+		}
+		if (columnNullable("work_locations", "check_in_method")) {
 			em.createNativeQuery(
-					"ALTER TABLE attendance_sessions " +
-					"ADD UNIQUE KEY uq_attendance_open_session (tenant_id, open_user_id)"
+					"ALTER TABLE work_locations MODIFY COLUMN check_in_method VARCHAR(20) NOT NULL"
 			).executeUpdate();
-			log.info("Added unique index uq_attendance_open_session on attendance_sessions");
+			log.info("Tightened work_locations.check_in_method to NOT NULL");
 		}
 
-		// Safety net: the "at most one open session per user" invariant is enforced ONLY by this
-		// index — check-in's findOpenForUser pre-check is not race-safe, so a missing index would
-		// silently allow duplicate open sessions. Fail startup loudly rather than run without it.
-		if (!indexExists("attendance_sessions", "uq_attendance_open_session")) {
-			throw new IllegalStateException(
-					"Required unique index uq_attendance_open_session is missing on attendance_sessions; " +
-					"the one-open-session-per-user guarantee cannot be enforced. Aborting startup.");
+		if (!columnExists("work_locations", "qr_token")) {
+			em.createNativeQuery(
+					"ALTER TABLE work_locations ADD COLUMN qr_token VARCHAR(32) NULL"
+			).executeUpdate();
+			log.info("Added work_locations.qr_token");
 		}
 
-		// QR-based check-ins don't collect GPS (proof of presence is the printed code, not the
-		// coordinate), so these columns can no longer be NOT NULL. Hibernate's ddl-auto=update
-		// won't relax an existing constraint on a populated table, so do it explicitly.
-		relaxNotNull("attendance_sessions", "check_in_lat", "DECIMAL(9,6)");
-		relaxNotNull("attendance_sessions", "check_in_lng", "DECIMAL(9,6)");
-		relaxNotNull("attendance_sessions", "check_in_accuracy_m", "INT");
+		if (!indexExists("work_locations", "uq_work_locations_qr_token")) {
+			em.createNativeQuery(
+					"ALTER TABLE work_locations ADD UNIQUE KEY uq_work_locations_qr_token (qr_token)"
+			).executeUpdate();
+			log.info("Added unique index uq_work_locations_qr_token on work_locations");
+		}
+
+		// lat/lng/radius_m are only required for GEOFENCE locations now; QR locations leave
+		// them null. Relax the NOT NULL constraints inherited from the geofence-only schema.
+		relaxNotNull("work_locations", "lat", "DECIMAL(9,6)");
+		relaxNotNull("work_locations", "lng", "DECIMAL(9,6)");
+		relaxNotNull("work_locations", "radius_m", "INT");
 	}
 
 	private void relaxNotNull(String table, String column, String columnType) {
