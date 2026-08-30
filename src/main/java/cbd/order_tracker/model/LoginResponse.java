@@ -19,6 +19,9 @@ public class LoginResponse {
 	private Set<String> features;
 	private String tenantAccentColor;
 	private String tenantBackgroundColor;
+	private String tenantTextColor;
+	private String tenantMutedTextColor;
+	private String tenantSubtleTextColor;
 
 	public String getToken() {
 		return token;
@@ -114,6 +117,12 @@ public class LoginResponse {
 	public void setTenantAccentColor(String tenantAccentColor) { this.tenantAccentColor = tenantAccentColor; }
 	public String getTenantBackgroundColor() { return tenantBackgroundColor; }
 	public void setTenantBackgroundColor(String tenantBackgroundColor) { this.tenantBackgroundColor = tenantBackgroundColor; }
+	public String getTenantTextColor() { return tenantTextColor; }
+	public void setTenantTextColor(String tenantTextColor) { this.tenantTextColor = tenantTextColor; }
+	public String getTenantMutedTextColor() { return tenantMutedTextColor; }
+	public void setTenantMutedTextColor(String tenantMutedTextColor) { this.tenantMutedTextColor = tenantMutedTextColor; }
+	public String getTenantSubtleTextColor() { return tenantSubtleTextColor; }
+	public void setTenantSubtleTextColor(String tenantSubtleTextColor) { this.tenantSubtleTextColor = tenantSubtleTextColor; }
 
 	@Override
 	public String toString() {

@@ -18,6 +18,9 @@ public class TenantPublicDto {
 	private Set<String> features;
 	private String accentColor;
 	private String backgroundColor;
+	private String textColor;
+	private String mutedTextColor;
+	private String subtleTextColor;
 
 	public TenantPublicDto(Tenant tenant) {
 		this.name = tenant.getName();
@@ -33,5 +36,8 @@ public class TenantPublicDto {
 						.collect(Collectors.toCollection(LinkedHashSet::new));
 		this.accentColor = tenant.getAccentColor();
 		this.backgroundColor = tenant.getBackgroundColor();
+		this.textColor = tenant.getTextColor();
+		this.mutedTextColor = tenant.getMutedTextColor();
+		this.subtleTextColor = tenant.getSubtleTextColor();
 	}
 }

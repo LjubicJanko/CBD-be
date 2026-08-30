@@ -65,6 +65,15 @@ public class Tenant {
 	@Column(name = "background_color", length = 7)
 	private String backgroundColor;
 
+	@Column(name = "text_color", length = 7)
+	private String textColor;
+
+	@Column(name = "muted_text_color", length = 7)
+	private String mutedTextColor;
+
+	@Column(name = "subtle_text_color", length = 7)
+	private String subtleTextColor;
+
 	public Tenant() {}
 
 	public Tenant(String name, String slug) {

@@ -20,6 +20,9 @@ public class TenantResDto {
 	private Set<String> features;
 	private String accentColor;
 	private String backgroundColor;
+	private String textColor;
+	private String mutedTextColor;
+	private String subtleTextColor;
 
 	public TenantResDto(Tenant tenant) {
 		this.id = tenant.getId();
@@ -34,5 +37,8 @@ public class TenantResDto {
 		this.features = tenant.getFeatures() != null ? new HashSet<>(tenant.getFeatures()) : new HashSet<>();
 		this.accentColor = tenant.getAccentColor();
 		this.backgroundColor = tenant.getBackgroundColor();
+		this.textColor = tenant.getTextColor();
+		this.mutedTextColor = tenant.getMutedTextColor();
+		this.subtleTextColor = tenant.getSubtleTextColor();
 	}
 }

@@ -57,6 +57,24 @@ public class CreateTenantReqDto {
 	@JsonIgnore
 	private boolean backgroundColorProvided = false;
 
+	@Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "textColor must be a 6-digit hex color, e.g. #0B1120")
+	private String textColor;
+
+	@JsonIgnore
+	private boolean textColorProvided = false;
+
+	@Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "mutedTextColor must be a 6-digit hex color, e.g. #0B1120")
+	private String mutedTextColor;
+
+	@JsonIgnore
+	private boolean mutedTextColorProvided = false;
+
+	@Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "subtleTextColor must be a 6-digit hex color, e.g. #0B1120")
+	private String subtleTextColor;
+
+	@JsonIgnore
+	private boolean subtleTextColorProvided = false;
+
 	public void setSocialLink(SocialLinkDto socialLink) {
 		this.socialLink = socialLink;
 		this.socialLinkProvided = true;
@@ -75,5 +93,20 @@ public class CreateTenantReqDto {
 	public void setBackgroundColor(String backgroundColor) {
 		this.backgroundColor = backgroundColor;
 		this.backgroundColorProvided = true;
+	}
+
+	public void setTextColor(String textColor) {
+		this.textColor = textColor;
+		this.textColorProvided = true;
+	}
+
+	public void setMutedTextColor(String mutedTextColor) {
+		this.mutedTextColor = mutedTextColor;
+		this.mutedTextColorProvided = true;
+	}
+
+	public void setSubtleTextColor(String subtleTextColor) {
+		this.subtleTextColor = subtleTextColor;
+		this.subtleTextColorProvided = true;
 	}
 }

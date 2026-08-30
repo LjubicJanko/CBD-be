@@ -115,6 +115,15 @@ public class PlatformServiceImpl implements PlatformService {
 		if (dto.isBackgroundColorProvided()) {
 			tenant.setBackgroundColor(normalizeColor(dto.getBackgroundColor()));
 		}
+		if (dto.isTextColorProvided()) {
+			tenant.setTextColor(normalizeColor(dto.getTextColor()));
+		}
+		if (dto.isMutedTextColorProvided()) {
+			tenant.setMutedTextColor(normalizeColor(dto.getMutedTextColor()));
+		}
+		if (dto.isSubtleTextColorProvided()) {
+			tenant.setSubtleTextColor(normalizeColor(dto.getSubtleTextColor()));
+		}
 	}
 
 	private static String normalizeColor(String color) {
