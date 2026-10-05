@@ -1,9 +1,11 @@
 package cbd.order_tracker.model.dto;
 
 import cbd.order_tracker.model.OrderExecutionStatus;
+import cbd.order_tracker.model.OrderHistoryEventType;
 import cbd.order_tracker.model.OrderStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class OrderStatusHistoryDTO {
 
@@ -15,6 +17,8 @@ public class OrderStatusHistoryDTO {
     private String user; // can be full name, or username
     private String postalCode;
     private String postalService;
+    private OrderHistoryEventType eventType;
+    private List<String> relatedOrderNames;
 
     public Long getId() {
         return id;
@@ -78,5 +82,21 @@ public class OrderStatusHistoryDTO {
 
     public void setPostalService(String postalService) {
         this.postalService = postalService;
+    }
+
+    public OrderHistoryEventType getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(OrderHistoryEventType eventType) {
+        this.eventType = eventType;
+    }
+
+    public List<String> getRelatedOrderNames() {
+        return relatedOrderNames;
+    }
+
+    public void setRelatedOrderNames(List<String> relatedOrderNames) {
+        this.relatedOrderNames = relatedOrderNames;
     }
 }

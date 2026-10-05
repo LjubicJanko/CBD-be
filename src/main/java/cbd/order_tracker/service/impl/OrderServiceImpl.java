@@ -429,6 +429,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		List<String> aliasIds = new ArrayList<>(mainOrder.getAliasIds());
+		List<String> relatedOrderNames = new ArrayList<>();
 
 		for (int i = 1; i < ids.size(); i++) {
 			Long otherId = ids.get(i);
@@ -440,6 +441,7 @@ public class OrderServiceImpl implements OrderService {
 
 			aliasIds.add(otherOrder.getTrackingId());
 			aliasIds.addAll(otherOrder.getAliasIds());
+			relatedOrderNames.add(otherOrder.getName());
 
 			otherOrder.setDeleted(true);
 			orderRepository.save(otherOrder);
@@ -449,6 +451,7 @@ public class OrderServiceImpl implements OrderService {
 		mainOrder.setDescription(dto.getDescription());
 		mainOrder.setContactInfo(dto.getContactInfo());
 		mainOrder.setAliasIds(aliasIds);
+		mainOrder.addCombinedHistory(relatedOrderNames);
 
 		orderRepository.save(mainOrder);
 		return OrderExtensionMapper.toDto(mainOrder);

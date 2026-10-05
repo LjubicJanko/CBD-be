@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @JsonIgnoreProperties("order")
 @Entity
@@ -33,6 +34,14 @@ public class OrderStatusHistory {
 	private String postalCode;
 	private String postalService;
 
+	@Enumerated(EnumType.STRING)
+	private OrderHistoryEventType eventType;
+
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "order_status_history_related_names", joinColumns = @JoinColumn(name = "history_id"))
+	@Column(name = "related_order_name")
+	private List<String> relatedOrderNames;
+
 	public OrderStatusHistory() {
 	}
 
@@ -50,6 +59,14 @@ public class OrderStatusHistory {
 		this.order = order;
 		this.executionStatus = executionStatus;
 		this.closingComment = comment;
+		this.creationTime = LocalDateTime.now();
+	}
+
+	public OrderStatusHistory(OrderRecord order, OrderHistoryEventType eventType, List<String> relatedOrderNames) {
+		this.user = UserUtil.getCurrentUserName();
+		this.order = order;
+		this.eventType = eventType;
+		this.relatedOrderNames = relatedOrderNames;
 		this.creationTime = LocalDateTime.now();
 	}
 
@@ -123,6 +140,22 @@ public class OrderStatusHistory {
 
 	public void setPostalService(String postalService) {
 		this.postalService = postalService;
+	}
+
+	public OrderHistoryEventType getEventType() {
+		return eventType;
+	}
+
+	public void setEventType(OrderHistoryEventType eventType) {
+		this.eventType = eventType;
+	}
+
+	public List<String> getRelatedOrderNames() {
+		return relatedOrderNames;
+	}
+
+	public void setRelatedOrderNames(List<String> relatedOrderNames) {
+		this.relatedOrderNames = relatedOrderNames;
 	}
 
 	@Override

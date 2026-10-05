@@ -27,6 +27,8 @@ public class OrderMapper {
 					hDto.setCreationTime(h.getCreationTime());
 					hDto.setPostalCode(h.getPostalCode());
 					hDto.setPostalService(h.getPostalService());
+					hDto.setEventType(h.getEventType());
+					hDto.setRelatedOrderNames(h.getRelatedOrderNames());
 					if (h.getUser() != null) {
 						hDto.setUser(h.getUser());
 					}

@@ -174,6 +174,10 @@ public class OrderRecord {
 		statusHistory.add(new OrderStatusHistory(this, executionStatus, comment));
 	}
 
+	public void addCombinedHistory(List<String> relatedOrderNames) {
+		statusHistory.add(new OrderStatusHistory(this, OrderHistoryEventType.COMBINED, relatedOrderNames));
+	}
+
 	public void addPayment(PaymentRequestDto payment) {
 		Payment newPayment = new Payment(this, payment);
 		this.payments.add(newPayment);
