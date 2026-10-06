@@ -44,12 +44,19 @@ public class OrderMapper {
 
 	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history, Collection<Role> roles, List<Payment> payments) {
 		OrderDTO dto = new OrderDTO();
-		boolean isAdmin = TenantContext.isSuperadmin() || roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
+		boolean isAdmin = isAdmin(roles);
 
 		dto.setId(orderRecord.getId());
 		dto.setName(orderRecord.getName());
 		dto.setDescription(orderRecord.getDescription());
-		dto.setNote(orderRecord.getNote());
+		boolean internalNote = Boolean.TRUE.equals(orderRecord.getInternalNote());
+		if (isAdmin) {
+			dto.setNote(orderRecord.getNote());
+			dto.setInternalNote(internalNote);
+		} else if (!internalNote) {
+			// "" (never null) so clients can tell an empty note from a hidden internal one
+			dto.setNote(orderRecord.getNote() != null ? orderRecord.getNote() : "");
+		}
 		dto.setStatus(orderRecord.getStatus());
 		dto.setPriority(orderRecord.getPriority());
 		dto.setExecutionStatus(orderRecord.getExecutionStatus());
@@ -82,6 +89,10 @@ public class OrderMapper {
 		}
 
 		return dto;
+	}
+
+	public static boolean isAdmin(Collection<Role> roles) {
+		return TenantContext.isSuperadmin() || roles.stream().anyMatch(role -> "company_admin".equals(role.getName()));
 	}
 
 	public static OrderOverviewDto toOverviewDto(OrderRecord orderRecord) {

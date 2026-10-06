@@ -20,6 +20,8 @@ public class OrderDTO {
 	private String name;
 	private String description;
 	private String note;
+	// null (omitted) for non-admins; see OrderMapper.toDto
+	private Boolean internalNote;
 	private LocalDate plannedEndingDate;
 	private String pausingComment;
 	private OrderStatus status;

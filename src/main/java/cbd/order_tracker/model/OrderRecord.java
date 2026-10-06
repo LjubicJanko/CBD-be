@@ -30,6 +30,11 @@ public class OrderRecord {
 	private String name;
 	private String description;
 	private String note;
+
+	@Column(name = "internal_note", nullable = false, columnDefinition = "boolean default false")
+	// null on an inbound request body means "not provided"; never persisted as null (see @PrePersist)
+	private Boolean internalNote;
+
 	@Column(name = "planned_ending_date", columnDefinition = "DATE")
 	private LocalDate plannedEndingDate;
 	private String trackingId;
@@ -100,6 +105,13 @@ public class OrderRecord {
 	public OrderRecord() {
 	}
 
+	@PrePersist
+	void defaultInternalNote() {
+		if (internalNote == null) {
+			internalNote = false;
+		}
+	}
+
 	public OrderRecord(OrderExtensionReqDto extensionReqDto) {
 		this.name = extensionReqDto.getName();
 		this.description = extensionReqDto.getDescription();
@@ -131,6 +143,7 @@ public class OrderRecord {
 		this.name = order.getName();
 		this.description = order.getDescription();
 		this.note = order.getNote();
+		this.internalNote = Boolean.TRUE.equals(order.getInternalNote());
 		this.plannedEndingDate = order.getPlannedEndingDate();
 		this.trackingId = UUID.randomUUID().toString().substring(0, 8);
 		this.legalEntity = order.isLegalEntity();

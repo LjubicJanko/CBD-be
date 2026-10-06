@@ -62,8 +62,11 @@ public class OrderServiceImpl implements OrderService {
 		Tenant tenant = tenantRepository.findById(tenantId())
 				.orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
 		newOrder.setTenant(tenant);
-		OrderRecord orderRecord = orderRepository.save(newOrder);
 		Set<Role> roles = userUtil.getCurrentUserRoles();
+		if (!OrderMapper.isAdmin(roles)) {
+			newOrder.setInternalNote(false);
+		}
+		OrderRecord orderRecord = orderRepository.save(newOrder);
 
 		return OrderMapper.toDto(orderRecord, new ArrayList<>(), roles);
 	}
@@ -81,7 +84,17 @@ public class OrderServiceImpl implements OrderService {
 		OrderRecord orderRecord = findOrderForCurrentTenant(order.getId());
 		orderRecord.setName(order.getName());
 		orderRecord.setDescription(order.getDescription());
-		orderRecord.setNote(order.getNote());
+		Set<Role> roles = userUtil.getCurrentUserRoles();
+		if (OrderMapper.isAdmin(roles)) {
+			orderRecord.setNote(order.getNote());
+			// omitted flag means "keep the stored value"
+			if (order.getInternalNote() != null) {
+				orderRecord.setInternalNote(order.getInternalNote());
+			}
+		} else if (!Boolean.TRUE.equals(orderRecord.getInternalNote())) {
+			// non-admins may edit a non-internal note but never the flag
+			orderRecord.setNote(order.getNote());
+		}
 		orderRecord.setSalePrice(order.getSalePrice());
 		orderRecord.setSalePriceWithTax(order.getSalePrice().multiply(BigDecimal.valueOf(1.2)));
 		orderRecord.setAcquisitionCost(order.getAcquisitionCost());
@@ -90,7 +103,6 @@ public class OrderServiceImpl implements OrderService {
 		orderRecord.setLegalEntity(order.isLegalEntity());
 
 		var history = getOrderStatusHistory(order.getId());
-		Set<Role> roles = userUtil.getCurrentUserRoles();
 
 		return OrderMapper.toDto(orderRepository.save(orderRecord), history, roles);
 	}
