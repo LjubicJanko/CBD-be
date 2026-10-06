@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
+@Table(indexes = @Index(name = "idx_payment_date", columnList = "payment_date"))
 public class Payment {
 
 	@Id

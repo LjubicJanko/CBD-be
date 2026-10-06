@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,15 @@ public class OrderServiceImpl implements OrderService {
 
 	private Long tenantId() {
 		return TenantContext.requireTenantId();
+	}
+
+	private static void validatePayment(BigDecimal amount, LocalDate paymentDate) {
+		if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new IllegalArgumentException("Payment amount must be greater than zero");
+		}
+		if (paymentDate == null) {
+			throw new IllegalArgumentException("Payment date is required");
+		}
 	}
 
 	@Override
@@ -100,6 +110,12 @@ public class OrderServiceImpl implements OrderService {
 		orderRecord.setSalePrice(order.getSalePrice());
 		orderRecord.setSalePriceWithTax(order.getSalePrice().multiply(BigDecimal.valueOf(1.2)));
 		orderRecord.setAcquisitionCost(order.getAcquisitionCost());
+		// keep the stored balances consistent with the price (same formulas as OrderRecord.addPayment)
+		BigDecimal paid = orderRecord.getAmountPaid() != null ? orderRecord.getAmountPaid() : BigDecimal.ZERO;
+		BigDecimal cost = orderRecord.getAcquisitionCost() != null ? orderRecord.getAcquisitionCost() : BigDecimal.ZERO;
+		orderRecord.setAmountLeftToPay(orderRecord.getSalePrice().subtract(paid));
+		orderRecord.setAmountLeftToPayWithTax(orderRecord.getSalePriceWithTax().subtract(paid));
+		orderRecord.setPriceDifference(orderRecord.getSalePrice().subtract(cost));
 		orderRecord.setPriority(order.getPriority());
 		orderRecord.setPlannedEndingDate(order.getPlannedEndingDate());
 		orderRecord.setLegalEntity(order.isLegalEntity());
@@ -164,6 +180,7 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	@Override
 	public UpdatePaymentsResponse addPayment(Long id, PaymentRequestDto payment) {
+		validatePayment(payment.getAmount(), payment.getPaymentDate());
 		OrderRecord orderRecord = findOrderForCurrentTenant(id);
 		payment.setOrder(orderRecord);
 		orderRecord.addPayment(payment);
@@ -179,6 +196,7 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	@Override
 	public UpdatePaymentsResponse editPayment(Long orderId, Payment updatedPayment) {
+		validatePayment(updatedPayment.getAmount(), updatedPayment.getPaymentDate());
 		OrderRecord orderRecord = findOrderForCurrentTenant(orderId);
 		Payment existingPayment = orderRecord.getPayments().stream()
 				.filter(payment -> payment.getId().equals(updatedPayment.getId()))
