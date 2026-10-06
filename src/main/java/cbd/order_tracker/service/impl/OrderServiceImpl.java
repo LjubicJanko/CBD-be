@@ -8,6 +8,7 @@ import cbd.order_tracker.exceptions.TenantNotFoundException;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.model.dto.request.CombineExtensionsReqDto;
+import cbd.order_tracker.model.dto.request.EditPrintFilesUrlDto;
 import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
@@ -16,6 +17,7 @@ import cbd.order_tracker.service.OrderService;
 import cbd.order_tracker.util.OrderExtensionMapper;
 import cbd.order_tracker.util.OrderMapper;
 import cbd.order_tracker.util.PaymentMapper;
+import cbd.order_tracker.util.PrintFilesUrlValidator;
 import cbd.order_tracker.util.UserUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -132,16 +134,25 @@ public class OrderServiceImpl implements OrderService {
 		return changeExecutionStatus(id, OrderExecutionStatus.ACTIVE, null);
 	}
 
+	@Transactional
 	@Override
-	public OrderDTO changeStatus(Long id, String closingComment, String postalCode, String postalService) {
+	public OrderDTO changeStatus(Long id, String closingComment, String postalCode, String postalService, String printFilesUrl) {
 		OrderRecord orderRecord = findOrderForCurrentTenant(id);
+		// validate before any mutation (closingComment, user, status, history)
+		String link = PrintFilesUrlValidator.normalize(printFilesUrl);
+		if (link != null) {
+			PrintFilesUrlValidator.validate(link);
+			if (orderRecord.getStatus().next() != OrderStatus.PRINT_READY) {
+				throw new IllegalArgumentException("printFilesUrl can only be set when moving the order to PRINT_READY");
+			}
+		}
 		String currentUser = UserUtil.getCurrentUserName();
 		List<OrderStatusHistory> historyList = getOrderStatusHistory(id);
 		var lastHistoryRecord = historyList.get(historyList.size() - 1);
 		lastHistoryRecord.setClosingComment(closingComment);
 		lastHistoryRecord.setUser(currentUser);
 		orderRecord.setStatusHistory(historyList);
-		orderRecord.nextStatus(postalCode, postalService);
+		orderRecord.nextStatus(postalCode, postalService, link);
 		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
@@ -417,6 +428,35 @@ public class OrderServiceImpl implements OrderService {
 					h.setPostalService(dto.getPostalService());
 					h.setPostalCode(dto.getPostalCode());
 				});
+
+		orderRepository.save(orderRecord);
+
+		Set<Role> roles = userUtil.getCurrentUserRoles();
+
+		return OrderMapper.toDto(orderRecord, history, roles);
+	}
+
+	@Transactional
+	@Override
+	public OrderDTO editPrintFilesUrl(Long id, EditPrintFilesUrlDto dto) {
+		OrderRecord orderRecord = findOrderForCurrentTenant(id);
+
+		if (orderRecord.getStatus().compareTo(OrderStatus.PRINT_READY) < 0) {
+			throw new IllegalArgumentException("Order must be at PRINT_READY or later to edit the print files link");
+		}
+		String link = PrintFilesUrlValidator.normalize(dto.getPrintFilesUrl());
+		if (link != null) {
+			PrintFilesUrlValidator.validate(link);
+		}
+
+		orderRecord.setPrintFilesUrl(link);
+
+		// Overwrite the PRINT_READY status history entry as well (no new audit event)
+		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
+		history.stream()
+				.filter(h -> h.getStatus() == OrderStatus.PRINT_READY)
+				.findFirst()
+				.ifPresent(h -> h.setPrintFilesUrl(link));
 
 		orderRepository.save(orderRecord);
 

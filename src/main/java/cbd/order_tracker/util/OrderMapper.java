@@ -27,6 +27,7 @@ public class OrderMapper {
 					hDto.setCreationTime(h.getCreationTime());
 					hDto.setPostalCode(h.getPostalCode());
 					hDto.setPostalService(h.getPostalService());
+					hDto.setPrintFilesUrl(h.getPrintFilesUrl());
 					hDto.setEventType(h.getEventType());
 					hDto.setRelatedOrderNames(h.getRelatedOrderNames());
 					if (h.getUser() != null) {
@@ -65,6 +66,7 @@ public class OrderMapper {
 		dto.setStatusHistory(mapStatusHistory(history));
 		dto.setPostalCode(orderRecord.getPostalCode());
 		dto.setPostalService(orderRecord.getPostalService());
+		dto.setPrintFilesUrl(orderRecord.getPrintFilesUrl());
 
 		dto.setAcquisitionCost(orderRecord.getAcquisitionCost());
 		dto.setLegalEntity(orderRecord.isLegalEntity());

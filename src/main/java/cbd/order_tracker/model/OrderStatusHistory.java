@@ -34,6 +34,9 @@ public class OrderStatusHistory {
 	private String postalCode;
 	private String postalService;
 
+	@Column(name = "print_files_url", length = 2048)
+	private String printFilesUrl;
+
 	@Enumerated(EnumType.STRING)
 	private OrderHistoryEventType eventType;
 
@@ -140,6 +143,14 @@ public class OrderStatusHistory {
 
 	public void setPostalService(String postalService) {
 		this.postalService = postalService;
+	}
+
+	public String getPrintFilesUrl() {
+		return printFilesUrl;
+	}
+
+	public void setPrintFilesUrl(String printFilesUrl) {
+		this.printFilesUrl = printFilesUrl;
 	}
 
 	public OrderHistoryEventType getEventType() {

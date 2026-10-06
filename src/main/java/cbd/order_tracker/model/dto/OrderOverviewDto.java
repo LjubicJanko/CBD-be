@@ -19,6 +19,7 @@ public class OrderOverviewDto {
 	private BigDecimal amountLeftToPay;
 	private String postalCode;
 	private String postalService;
+	private String printFilesUrl;
 	private boolean extension;
 
 	public OrderOverviewDto() {
@@ -37,6 +38,7 @@ public class OrderOverviewDto {
 		this.dateWhenMovedToDone = orderRecord.getDateWhenMovedToDone();
 		this.postalCode = orderRecord.getPostalCode();
 		this.postalService = orderRecord.getPostalService();
+		this.printFilesUrl = orderRecord.getPrintFilesUrl();
 
 		BigDecimal priceForCalculation = orderRecord.isLegalEntity() ? orderRecord.getSalePriceWithTax() : orderRecord.getSalePrice();
 		BigDecimal amountLefToPay = priceForCalculation.subtract(orderRecord.getAmountPaid());
@@ -59,7 +61,8 @@ public class OrderOverviewDto {
 			BigDecimal salePriceWithTax,
 			boolean legalEntity,
 			BigDecimal amountPaid,
-			Boolean extension
+			Boolean extension,
+			String printFilesUrl
 	) {
 		this.id = id;
 		this.name = name;
@@ -71,6 +74,7 @@ public class OrderOverviewDto {
 		this.dateWhenMovedToDone = dateWhenMovedToDone;
 		this.postalCode = postalCode;
 		this.postalService = postalService;
+		this.printFilesUrl = printFilesUrl;
 		this.extension = Boolean.TRUE.equals(extension);
 
 		BigDecimal priceForCalculation = legalEntity ? salePriceWithTax : salePrice;
@@ -166,6 +170,14 @@ public class OrderOverviewDto {
 
 	public void setPostalService(String postalService) {
 		this.postalService = postalService;
+	}
+
+	public String getPrintFilesUrl() {
+		return printFilesUrl;
+	}
+
+	public void setPrintFilesUrl(String printFilesUrl) {
+		this.printFilesUrl = printFilesUrl;
 	}
 
 	public boolean isExtension() {

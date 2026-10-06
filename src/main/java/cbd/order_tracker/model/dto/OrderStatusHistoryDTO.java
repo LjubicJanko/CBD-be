@@ -17,6 +17,7 @@ public class OrderStatusHistoryDTO {
     private String user; // can be full name, or username
     private String postalCode;
     private String postalService;
+    private String printFilesUrl;
     private OrderHistoryEventType eventType;
     private List<String> relatedOrderNames;
 
@@ -82,6 +83,14 @@ public class OrderStatusHistoryDTO {
 
     public void setPostalService(String postalService) {
         this.postalService = postalService;
+    }
+
+    public String getPrintFilesUrl() {
+        return printFilesUrl;
+    }
+
+    public void setPrintFilesUrl(String printFilesUrl) {
+        this.printFilesUrl = printFilesUrl;
     }
 
     public OrderHistoryEventType getEventType() {

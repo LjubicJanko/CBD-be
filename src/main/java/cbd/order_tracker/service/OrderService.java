@@ -3,6 +3,7 @@ package cbd.order_tracker.service;
 import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.model.dto.request.CombineExtensionsReqDto;
+import cbd.order_tracker.model.dto.request.EditPrintFilesUrlDto;
 import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
 import cbd.order_tracker.model.dto.request.OrderExtensionReqDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
@@ -23,7 +24,7 @@ public interface OrderService {
 
     OrderDTO reactivateOrder(Long id);
 
-    OrderDTO changeStatus(Long id, String closingComment, String postalCode, String postalService);
+    OrderDTO changeStatus(Long id, String closingComment, String postalCode, String postalService, String printFilesUrl);
 
     UpdatePaymentsResponse addPayment(Long id, PaymentRequestDto payment);
 
@@ -63,6 +64,8 @@ public interface OrderService {
     OrderExtensionDto editExtension(String trackingId, OrderExtensionReqDto dto);
 
     OrderDTO editShipmentInfo(Long id, EditShipmentInfoDto dto);
+
+    OrderDTO editPrintFilesUrl(Long id, EditPrintFilesUrlDto dto);
 
     OrderExtensionDto combineExtensions(CombineExtensionsReqDto dto);
 }

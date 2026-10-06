@@ -70,6 +70,9 @@ public class OrderRecord {
 	private String postalCode;
 	private String postalService;
 
+	@Column(name = "print_files_url", length = 2048)
+	private String printFilesUrl;
+
 	@Enumerated(EnumType.STRING)
 	@Column(length = 32)
 	private OrderStatus status;
@@ -168,15 +171,20 @@ public class OrderRecord {
 	}
 
 
-	public void nextStatus(String postalCode, String postalService) {
+	public void nextStatus(String postalCode, String postalService, String printFilesUrl) {
 		this.status = this.status.next();
+		String historyPrintFilesUrl = null;
 		if(status.equals(OrderStatus.SHIPPED)) {
 			this.postalService = postalService;
 			this.postalCode = postalCode;
 		} else if(status.equals(OrderStatus.DONE)) {
 			this.dateWhenMovedToDone = LocalDateTime.now();
+		} else if(status.equals(OrderStatus.PRINT_READY)) {
+			this.printFilesUrl = printFilesUrl;
+			historyPrintFilesUrl = printFilesUrl;
 		}
 		addStatusHistory(status, postalCode, postalService);
+		statusHistory.get(statusHistory.size() - 1).setPrintFilesUrl(historyPrintFilesUrl);
 	}
 
 	private void addStatusHistory(OrderStatus newStatus, String postalCode, String postalService) {

@@ -6,12 +6,14 @@ import cbd.order_tracker.model.*;
 import cbd.order_tracker.model.enums.Feature;
 import cbd.order_tracker.model.dto.*;
 import cbd.order_tracker.model.dto.request.CombineExtensionsReqDto;
+import cbd.order_tracker.model.dto.request.EditPrintFilesUrlDto;
 import cbd.order_tracker.model.dto.request.EditShipmentInfoDto;
 import cbd.order_tracker.model.dto.response.OrderExtensionDto;
 import cbd.order_tracker.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -117,7 +119,9 @@ public class OrderController {
 		String postalCode = body.getOrDefault("postalCode", null);
 		String postalService = body.getOrDefault("postalService", null);
 
-		return orderService.changeStatus(id, closingComment, postalCode, postalService);
+		String printFilesUrl = body.getOrDefault("printFilesUrl", null);
+
+		return orderService.changeStatus(id, closingComment, postalCode, postalService, printFilesUrl);
 	}
 
 	@PostMapping("/addPayment/{id}")
@@ -138,6 +142,12 @@ public class OrderController {
 	@PutMapping("/editShipmentInfo/{id}")
 	public ResponseEntity<OrderDTO> editShipmentInfo(@PathVariable Long id, @RequestBody EditShipmentInfoDto dto) {
 		return new ResponseEntity<>(orderService.editShipmentInfo(id, dto), HttpStatus.OK);
+	}
+
+	@PreAuthorize("hasAnyRole('company_admin','SUPERADMIN')")
+	@PutMapping("/editPrintFilesUrl/{id}")
+	public ResponseEntity<OrderDTO> editPrintFilesUrl(@PathVariable Long id, @RequestBody EditPrintFilesUrlDto dto) {
+		return new ResponseEntity<>(orderService.editPrintFilesUrl(id, dto), HttpStatus.OK);
 	}
 
 	@PostMapping("/combineExtensions")

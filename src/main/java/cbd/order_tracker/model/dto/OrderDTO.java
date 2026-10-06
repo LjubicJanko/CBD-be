@@ -44,6 +44,8 @@ public class OrderDTO {
 
 	private String postalCode;
 	private String postalService;
+	// visible to every authenticated role; never on the public tracking DTOs
+	private String printFilesUrl;
 
 	private ContactInfo contactInfo;
 	private Boolean extension;
