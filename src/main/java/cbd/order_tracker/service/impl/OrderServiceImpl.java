@@ -24,12 +24,14 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +55,19 @@ public class OrderServiceImpl implements OrderService {
 				.orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
 		TenantGuard.assertTenantMatch(order.getTenant());
 		return order;
+	}
+
+	private static boolean requiresAdminForExecutionChange(OrderExecutionStatus current, OrderExecutionStatus requested) {
+		return current == OrderExecutionStatus.ARCHIVED
+				|| current == OrderExecutionStatus.CANCELED
+				|| requested == OrderExecutionStatus.ARCHIVED;
+	}
+
+	private static boolean hasPrivilege(Collection<Role> roles, String privilege) {
+		return roles.stream()
+				.filter(role -> role.getPrivileges() != null)
+				.flatMap(role -> role.getPrivileges().stream())
+				.anyMatch(p -> privilege.equals(p.getName()));
 	}
 
 	private Long tenantId() {
@@ -129,13 +144,21 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public OrderDTO changeExecutionStatus(Long id, OrderExecutionStatus executionStatus, String note) {
 		OrderRecord orderRecord = findOrderForCurrentTenant(id);
+		Set<Role> roles = userUtil.getCurrentUserRoles();
+		if (requiresAdminForExecutionChange(orderRecord.getExecutionStatus(), executionStatus)
+				&& !OrderMapper.isAdmin(roles)) {
+			throw new AccessDeniedException("Only a company admin can change the status of an archived or canceled order");
+		}
+		if (executionStatus == OrderExecutionStatus.CANCELED && !OrderMapper.isAdmin(roles)
+				&& !hasPrivilege(roles, "order-cancel")) {
+			throw new AccessDeniedException("The order-cancel privilege is required to cancel an order");
+		}
 		orderRecord.setExecutionStatus(executionStatus);
 		orderRecord.setPausingComment(note);
 		orderRecord.addExecutionStatusHistory(executionStatus, note);
 		orderRepository.save(orderRecord);
 
 		List<OrderStatusHistory> history = statusHistoryRepository.findByOrderId(id);
-		Set<Role> roles = userUtil.getCurrentUserRoles();
 
 		return OrderMapper.toDto(orderRecord, history, roles);
 	}

@@ -325,9 +325,12 @@ class ReportServiceImplPaymentsReportTest {
     }
 
     @Test
-    void paymentsOfCanceledOrdersAreIncluded() throws NoSuchMethodException {
-        assertThat(listQuery()).doesNotContain("executionStatus");
-        assertThat(groupQuery()).doesNotContain("executionStatus");
+    void onlyPaymentsOfActiveAndPausedOrdersAreIncluded() throws NoSuchMethodException {
+        String filter = "o.executionStatus IN (cbd.order_tracker.model.OrderExecutionStatus.ACTIVE, "
+                + "cbd.order_tracker.model.OrderExecutionStatus.PAUSED)";
+        assertThat(listQuery()).contains(filter);
+        assertThat(groupQuery()).contains(filter);
+        assertThat(PaymentRepository.REPORT_BASE_WHERE).doesNotContain("ARCHIVED").doesNotContain("CANCELED");
     }
 
     @Test

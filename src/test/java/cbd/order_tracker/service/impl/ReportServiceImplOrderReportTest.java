@@ -212,11 +212,12 @@ class ReportServiceImplOrderReportTest {
     }
 
     @Test
-    void totalAmountPaidIncludesCanceledOrdersPaymentsAndExcludesSoftDeletedOnes() {
+    void totalAmountPaidCountsOnlyActiveAndPausedOrdersAndExcludesSoftDeletedOnes() {
         String q = queryOf(PaymentRepository.class, "sumPaymentAmounts");
 
         assertThat(q).contains("JOIN p.order o").contains("o.deleted = false").contains("o.tenant.id = :tenantId")
-                .doesNotContain("executionStatus");
+                .contains("o.executionStatus IN (cbd.order_tracker.model.OrderExecutionStatus.ACTIVE, "
+                        + "cbd.order_tracker.model.OrderExecutionStatus.PAUSED)");
     }
 
     @Test

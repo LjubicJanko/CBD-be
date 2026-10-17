@@ -12,6 +12,7 @@ public class OrderStatusHistoryDTO {
     private Long id;
     private OrderStatus status;
     private OrderExecutionStatus executionStatus;
+    private OrderExecutionStatus previousExecutionStatus; // derived, read-only
     private String closingComment;
     private LocalDateTime creationTime;
     private String user; // can be full name, or username
@@ -43,6 +44,14 @@ public class OrderStatusHistoryDTO {
 
     public void setExecutionStatus(OrderExecutionStatus executionStatus) {
         this.executionStatus = executionStatus;
+    }
+
+    public OrderExecutionStatus getPreviousExecutionStatus() {
+        return previousExecutionStatus;
+    }
+
+    public void setPreviousExecutionStatus(OrderExecutionStatus previousExecutionStatus) {
+        this.previousExecutionStatus = previousExecutionStatus;
     }
 
     public String getClosingComment() {

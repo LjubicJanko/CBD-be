@@ -1,6 +1,7 @@
 package cbd.order_tracker.util;
 
 import cbd.order_tracker.config.TenantContext;
+import cbd.order_tracker.model.OrderExecutionStatus;
 import cbd.order_tracker.model.OrderRecord;
 import cbd.order_tracker.model.OrderStatusHistory;
 import cbd.order_tracker.model.Payment;
@@ -12,17 +13,22 @@ import cbd.order_tracker.model.dto.OrderTrackingDTO;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class OrderMapper {
 
 	public static List<OrderStatusHistoryDTO> mapStatusHistory(List<OrderStatusHistory> history) {
+		Map<OrderStatusHistory, OrderExecutionStatus> previous = derivePreviousExecutionStatuses(history);
 		return history.stream()
 				.map(h -> {
 					OrderStatusHistoryDTO hDto = new OrderStatusHistoryDTO();
 					hDto.setId(h.getId());
 					hDto.setStatus(h.getStatus());
 					hDto.setExecutionStatus(h.getExecutionStatus());
+					hDto.setPreviousExecutionStatus(previous.get(h));
 					hDto.setClosingComment(h.getClosingComment());
 					hDto.setCreationTime(h.getCreationTime());
 					hDto.setPostalCode(h.getPostalCode());
@@ -38,6 +44,27 @@ public class OrderMapper {
 				.toList();
 	}
 
+
+	/**
+	 * For each execution-status row (non-null executionStatus), the executionStatus of the nearest earlier
+	 * execution-status row (ordered by creationTime, then id), or ACTIVE for the first one.
+	 * Keyed by identity; rows that are not execution-status rows are absent.
+	 */
+	private static Map<OrderStatusHistory, OrderExecutionStatus> derivePreviousExecutionStatuses(List<OrderStatusHistory> history) {
+		Map<OrderStatusHistory, OrderExecutionStatus> result = new IdentityHashMap<>();
+		List<OrderStatusHistory> executionRows = history.stream()
+				.filter(h -> h.getExecutionStatus() != null)
+				.sorted(Comparator
+						.comparing(OrderStatusHistory::getCreationTime, Comparator.nullsFirst(Comparator.naturalOrder()))
+						.thenComparing(OrderStatusHistory::getId, Comparator.nullsFirst(Comparator.naturalOrder())))
+				.toList();
+		OrderExecutionStatus prev = OrderExecutionStatus.ACTIVE;
+		for (OrderStatusHistory row : executionRows) {
+			result.put(row, prev);
+			prev = row.getExecutionStatus();
+		}
+		return result;
+	}
 
 	public static OrderDTO toDto(OrderRecord orderRecord, List<OrderStatusHistory> history, Collection<Role> roles) {
 		return toDto(orderRecord, history, roles, null);

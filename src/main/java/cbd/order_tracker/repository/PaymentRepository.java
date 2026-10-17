@@ -21,6 +21,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 	// @SQLRestriction on OrderRecord is not relied on for the Payment -> order path.
 	String REPORT_BASE_FROM = "FROM Payment p JOIN p.order o ";
 	String REPORT_BASE_WHERE = "WHERE o.deleted = false AND o.tenant.id = :tenantId " +
+			"AND o.executionStatus IN (cbd.order_tracker.model.OrderExecutionStatus.ACTIVE, " +
+			"cbd.order_tracker.model.OrderExecutionStatus.PAUSED) " +
 			"AND (:from IS NULL OR p.paymentDate >= :from) " +
 			"AND (:to IS NULL OR p.paymentDate <= :to)";
 	String METHODS_FILTER = " AND (:methodFilter = false " +
@@ -54,7 +56,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 			@Param("from") LocalDate from,
 			@Param("to") LocalDate to);
 
-	/** Sum of all payments by payment date (no method or order status filter). Null when there are none. */
+	/** Sum of payments by payment date on active and paused orders (no method filter). Null when there are none. */
 	@Query("SELECT SUM(p.amount) " + REPORT_BASE_FROM + REPORT_BASE_WHERE)
 	BigDecimal sumPaymentAmounts(
 			@Param("tenantId") Long tenantId,
