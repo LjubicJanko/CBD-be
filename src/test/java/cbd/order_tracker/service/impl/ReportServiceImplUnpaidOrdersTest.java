@@ -148,25 +148,13 @@ class ReportServiceImplUnpaidOrdersTest {
     }
 
     @Test
-    void canceledOrdersAreExcludedFromUnpaidOrders() throws NoSuchMethodException {
-        assertThat(listDescQuery()).contains(
-                "o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED");
-    }
-
-    @Test
-    void archivedPausedAndActiveOrdersWithABalanceAreListed() throws NoSuchMethodException {
-        // the only execution status predicate is <> CANCELED, so ARCHIVED, PAUSED and ACTIVE all pass
-        String q = listDescQuery();
-        assertThat(q).doesNotContain("ARCHIVED").doesNotContain("PAUSED").doesNotContain("ACTIVE");
-        List<UnpaidOrderRowDto> rows = new ArrayList<>();
-        for (OrderExecutionStatus status : List.of(OrderExecutionStatus.ARCHIVED, OrderExecutionStatus.PAUSED,
-                OrderExecutionStatus.ACTIVE)) {
-            rows.add(new UnpaidOrderRowDto((long) rows.size(), "o", "t", OrderStatus.PENDING, status,
-                    new BigDecimal("10"), BigDecimal.ZERO, new BigDecimal("10"), null, 0L));
-        }
-        stub(rows, 3, "30");
-
-        assertThat(unpaid().data).hasSize(3);
+    void onlyActiveAndPausedOrdersAreListedAndSummed() throws NoSuchMethodException {
+        String filter = "o.executionStatus IN (cbd.order_tracker.model.OrderExecutionStatus.ACTIVE, "
+                + "cbd.order_tracker.model.OrderExecutionStatus.PAUSED)";
+        assertThat(listDescQuery()).contains(filter);
+        assertThat(queryOf("findUnpaidOrdersAsc")).contains(filter);
+        assertThat(queryOf("sumUnpaidBalance")).contains(filter);
+        assertThat(OrderRepository.UNPAID_BASE_WHERE).doesNotContain("ARCHIVED").doesNotContain("CANCELED");
     }
 
     @Test

@@ -129,12 +129,13 @@ class ReportServiceImplOrderReportTest {
     }
 
     @Test
-    void totalOutstandingExcludesCanceledAndSoftDeletedOrders() {
+    void totalOutstandingCountsOnlyActiveAndPausedOrdersAndExcludesSoftDeletedOnes() {
         String q = queryOf(OrderRepository.class, "getOutstandingTotal");
 
         assertThat(q).contains("o.deleted = false")
                 .contains("o.tenant.id = :tenantId")
-                .contains("o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED");
+                .contains("o.executionStatus IN (cbd.order_tracker.model.OrderExecutionStatus.ACTIVE, "
+                        + "cbd.order_tracker.model.OrderExecutionStatus.PAUSED)");
     }
 
     @Test

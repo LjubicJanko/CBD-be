@@ -84,7 +84,8 @@ public interface OrderRepository extends JpaRepository<OrderRecord, Long> {
 	String UNPAID_BALANCE = "(CASE WHEN o.legalEntity = true THEN COALESCE(o.salePriceWithTax, 0) ELSE COALESCE(o.salePrice, 0) END " +
 			"- COALESCE(o.amountPaid, 0))";
 	String UNPAID_BASE_WHERE = "WHERE o.deleted = false AND o.tenant.id = :tenantId " +
-			"AND o.executionStatus <> cbd.order_tracker.model.OrderExecutionStatus.CANCELED " +
+			"AND o.executionStatus IN (cbd.order_tracker.model.OrderExecutionStatus.ACTIVE, " +
+			"cbd.order_tracker.model.OrderExecutionStatus.PAUSED) " +
 			"AND (:from IS NULL OR o.creationTime >= :from) " +
 			"AND (:to IS NULL OR o.creationTime <= :to) " +
 			"AND " + UNPAID_BALANCE + " > 0";
